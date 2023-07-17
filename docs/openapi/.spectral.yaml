@@ -1,0 +1,3 @@
+# this ruleset file is used by Spectral (API style guide linter) [https://docs.stoplight.io/docs/spectral/674b27b261c3c-overview]
+# install Spectral and from the command line run: spectral lint openapi[-v3|-v4].yaml
+extends: "spectral:oas" # OpenAPI ruleset [https://docs.stoplight.io/docs/spectral/4dec24461f3af-open-api-rules]
