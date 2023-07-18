@@ -1,5 +1,8 @@
 # Contacts store
-This is a very basic contacts store used as a training project to highlight architectures principles:
+This is a very basic contacts store used as a training project to highlight architectures principles
+
+## WARNING
+The store is not thread safe!
 
 # Highlights
 - SOLID

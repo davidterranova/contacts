@@ -37,3 +37,8 @@ test-unit:
 .PHONY: mockgen
 mockgen:
 	go generate ./...
+
+.PHONY: gqlgen
+gqlgen:
+	go get github.com/99designs/gqlgen@v0.17.35
+	go run github.com/99designs/gqlgen generate

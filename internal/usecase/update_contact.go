@@ -3,6 +3,7 @@ package usecase
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/davidterranova/contacts/internal/domain"
 	"github.com/go-playground/validator"
@@ -41,20 +42,30 @@ func (h UpdateContact) Update(ctx context.Context, cmd CmdUpdateContact) (*domai
 	}
 
 	contact, err := h.repo.Update(ctx, contactUUID, func(c domain.Contact) (domain.Contact, error) {
+		updated := false
+
 		if cmd.FirstName != "" {
+			updated = true
 			c.FirstName = cmd.FirstName
 		}
 
 		if cmd.LastName != "" {
+			updated = true
 			c.LastName = cmd.LastName
 		}
 
 		if cmd.Email != "" {
+			updated = true
 			c.Email = cmd.Email
 		}
 
 		if cmd.Phone != "" {
+			updated = true
 			c.Phone = cmd.Phone
+		}
+
+		if updated {
+			c.UpdatedAt = time.Now().UTC()
 		}
 
 		return c, nil
