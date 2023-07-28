@@ -18,3 +18,17 @@ The store is not thread safe!
 ```
 go run main.go server
 ```
+
+# Dev install
+
+## Protobuff
+Install protobuff
+
+https://github.com/protocolbuffers/protobuf
+
+```
+brew install protobuf
+go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2
+export PATH="$PATH:$(go env GOPATH)/bin"
+```
