@@ -16,6 +16,9 @@ BUILD_ENV=GOARCH=amd64 CGO_ENABLED=0
 LDFLAGS=-ldflags='-w -s -X github.com/davidterranova/contacts/cmd.Version=${VERSION} -X github.com/davidterranova/contacts/cmd.BuildTime=${BUILDTIME}'
 BUILD_FLAGS=-a
 
+GRPC_DST_DIR=.
+GRPC_SRC_DIR=./internal/adapters/grpc
+
 .PHONY: build
 build: clean prepare
 	$(BUILD_ENV) $(GOOS) $(GOBUILD) $(BUILD_FLAGS) $(LDFLAGS) -o $(TARGET_DIR)/$(BINARY) .
@@ -42,3 +45,8 @@ mockgen:
 gqlgen:
 	go get github.com/99designs/gqlgen@v0.17.35
 	go run github.com/99designs/gqlgen generate
+
+.PHONY: grpcgen
+grpcgen:
+	protoc -I=$(GRPC_SRC_DIR) --go_out=$(GRPC_DST_DIR) $(GRPC_SRC_DIR)/contacts.proto
+	protoc --go_out=$(GRPC_DST_DIR) --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative $(GRPC_SRC_DIR)/contacts.proto
