@@ -1,0 +1,10 @@
+linters:
+  disable:
+    - ineffassign
+issues:
+  exclude-rules:
+    - path: pkg/eventsourcing/event_store.go
+      linters:
+        - ineffassign
+        - staticcheck
+      text: "SA4006: this value of `localEvents` is never used"

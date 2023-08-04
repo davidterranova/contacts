@@ -19,13 +19,13 @@ func NewInMemoryEventStore[T Aggregate]() *eventStore[T] {
 
 func (s *eventStore[T]) Store(events ...Event[T]) error {
 	for _, event := range events {
-		events, ok := s.storage[event.AggregateId()]
+		localEvents, ok := s.storage[event.AggregateId()]
 		if !ok {
-			events = make([]Event[T], 0)
+			localEvents = make([]Event[T], 0)
 		}
-		events = append(s.storage[event.AggregateId()], event)
+		localEvents = append(s.storage[event.AggregateId()], event)
 
-		s.storage[event.AggregateId()] = events
+		s.storage[event.AggregateId()] = localEvents
 	}
 	return nil
 }
