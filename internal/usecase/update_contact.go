@@ -2,16 +2,18 @@ package usecase
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"time"
 
 	"github.com/davidterranova/contacts/internal/domain"
+	"github.com/davidterranova/contacts/pkg/eventsourcing"
 	"github.com/go-playground/validator"
 	uuid "github.com/google/uuid"
 )
 
 type CmdUpdateContact struct {
-	ContactId string `validate:"required,uuid"`
+	eventsourcing.BaseCommand[*domain.Contact] `validate:"required"`
+
 	FirstName string `validate:"omitempty,min=2,max=255"`
 	LastName  string `validate:"omitempty,min=2,max=255"`
 	Email     string `validate:"omitempty,email"`
@@ -19,14 +21,14 @@ type CmdUpdateContact struct {
 }
 
 type UpdateContact struct {
-	repo      ContactRepository
-	validator *validator.Validate
+	validator      *validator.Validate
+	commandHandler eventsourcing.CommandHandler[*domain.Contact]
 }
 
-func NewUpdateContact(repo ContactRepository) UpdateContact {
+func NewUpdateContact(commandHandler eventsourcing.CommandHandler[*domain.Contact]) UpdateContact {
 	return UpdateContact{
-		repo:      repo,
-		validator: validator.New(),
+		validator:      validator.New(),
+		commandHandler: commandHandler,
 	}
 }
 
@@ -36,40 +38,58 @@ func (h UpdateContact) Update(ctx context.Context, cmd CmdUpdateContact) (*domai
 		return nil, fmt.Errorf("%w: %s", ErrInvalidCommand, err)
 	}
 
-	contactUUID, err := uuid.Parse(cmd.ContactId)
-	if err != nil {
+	contact, err := h.commandHandler.Handle(cmd)
+	switch {
+	case errors.Is(err, ErrNotFound):
+		return nil, err
+	case errors.Is(err, eventsourcing.ErrAggregateNotFound):
 		return nil, fmt.Errorf("%w: %s", ErrInvalidCommand, err)
+	case err != nil:
+		return nil, fmt.Errorf("%w: %s", ErrInternal, err)
+	default:
+		return contact, nil
+	}
+}
+
+func NewCmdUpdateContact(contactId uuid.UUID, firstName, lastName, email, phone string) CmdUpdateContact {
+	return CmdUpdateContact{
+		BaseCommand: eventsourcing.NewBaseCommand[*domain.Contact](
+			contactId,
+			domain.AggregateContact,
+		),
+		FirstName: firstName,
+		LastName:  lastName,
+		Email:     email,
+		Phone:     phone,
+	}
+}
+
+func (c CmdUpdateContact) Apply(aggregate *domain.Contact) ([]eventsourcing.Event[*domain.Contact], error) {
+	if aggregate.AggregateId() == uuid.Nil {
+		return nil, eventsourcing.ErrAggregateNotFound
+	}
+	if aggregate.DeletedAt != nil {
+		return nil, ErrNotFound
 	}
 
-	contact, err := h.repo.Update(ctx, contactUUID, func(c domain.Contact) (domain.Contact, error) {
-		updated := false
-
-		if cmd.FirstName != "" {
-			updated = true
-			c.FirstName = cmd.FirstName
+	events := make([]eventsourcing.Event[*domain.Contact], 0)
+	if c.FirstName != "" || c.LastName != "" {
+		if c.FirstName != "" && c.FirstName != aggregate.FirstName {
+			aggregate.FirstName = c.FirstName
+		}
+		if c.LastName != "" && c.LastName != aggregate.LastName {
+			aggregate.LastName = c.LastName
 		}
 
-		if cmd.LastName != "" {
-			updated = true
-			c.LastName = cmd.LastName
-		}
+		events = append(events, domain.NewEvtContactNameUpdated(c.AggregateId(), aggregate.FirstName, aggregate.LastName))
+	}
 
-		if cmd.Email != "" {
-			updated = true
-			c.Email = cmd.Email
-		}
+	if c.Email != "" && aggregate.Email != c.Email {
+		events = append(events, domain.NewEvtContactEmailUpdated(c.AggregateId(), c.Email))
+	}
+	if c.Phone != "" && aggregate.Phone != c.Phone {
+		events = append(events, domain.NewEvtContactPhoneUpdated(c.AggregateId(), c.Phone))
+	}
 
-		if cmd.Phone != "" {
-			updated = true
-			c.Phone = cmd.Phone
-		}
-
-		if updated {
-			c.UpdatedAt = time.Now().UTC()
-		}
-
-		return c, nil
-	})
-
-	return handleRepositoryError(contact, err)
+	return events, nil
 }

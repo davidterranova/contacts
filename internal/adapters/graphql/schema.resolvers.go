@@ -6,21 +6,23 @@ package graphql
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/davidterranova/contacts/internal/adapters/graphql/model"
 	"github.com/davidterranova/contacts/internal/usecase"
+	"github.com/google/uuid"
 )
 
 // CreateContact is the resolver for the createContact field.
-func (r *mutationResolver) CreateContact(ctx context.Context, input model.NewContact) (*model.Contact, error) {
+func (r *mutationResolver) CreateContact(ctx context.Context, req model.NewContact) (*model.Contact, error) {
 	contact, err := r.app.CreateContact(
 		ctx,
-		usecase.CmdCreateContact{
-			FirstName: input.FirstName,
-			LastName:  input.LastName,
-			Email:     input.Email,
-			Phone:     input.Phone,
-		},
+		usecase.NewCmdCreateContact(
+			req.FirstName,
+			req.LastName,
+			req.Email,
+			req.Phone,
+		),
 	)
 	if err != nil {
 		return nil, err
@@ -30,16 +32,21 @@ func (r *mutationResolver) CreateContact(ctx context.Context, input model.NewCon
 }
 
 // UpdateContact is the resolver for the updateContact field.
-func (r *mutationResolver) UpdateContact(ctx context.Context, id string, input model.NewContact) (*model.Contact, error) {
+func (r *mutationResolver) UpdateContact(ctx context.Context, id string, req model.NewContact) (*model.Contact, error) {
+	contactId, err := uuid.Parse(id)
+	if err != nil {
+		return nil, fmt.Errorf("invalid resource uuid: %s", err)
+	}
+
 	contact, err := r.app.UpdateContact(
 		ctx,
-		usecase.CmdUpdateContact{
-			ContactId: id,
-			FirstName: input.FirstName,
-			LastName:  input.LastName,
-			Email:     input.Email,
-			Phone:     input.Phone,
-		},
+		usecase.NewCmdUpdateContact(
+			contactId,
+			req.FirstName,
+			req.LastName,
+			req.Email,
+			req.Phone,
+		),
 	)
 	if err != nil {
 		return nil, err
@@ -50,7 +57,12 @@ func (r *mutationResolver) UpdateContact(ctx context.Context, id string, input m
 
 // DeleteContact is the resolver for the deleteContact field.
 func (r *mutationResolver) DeleteContact(ctx context.Context, id string) (*model.Contact, error) {
-	err := r.app.DeleteContact(ctx, usecase.CmdDeleteContact{ContactId: id})
+	contactId, err := uuid.Parse(id)
+	if err != nil {
+		return nil, fmt.Errorf("invalid resource uuid: %s", err)
+	}
+
+	err = r.app.DeleteContact(ctx, usecase.NewCmdDeleteContact(contactId))
 	if err != nil {
 		return nil, err
 	}

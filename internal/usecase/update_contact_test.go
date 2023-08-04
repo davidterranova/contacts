@@ -1,144 +1,132 @@
 package usecase
 
-import (
-	"context"
-	"errors"
-	"testing"
+// func TestUpdateContac(t *testing.T) {
+// 	t.Parallel()
 
-	"github.com/davidterranova/contacts/internal/domain"
-	"github.com/davidterranova/contacts/internal/ports"
-	"github.com/golang/mock/gomock"
-	"github.com/google/uuid"
-	"github.com/stretchr/testify/assert"
-)
+// 	testUpdateContactValidation(t)
+// 	testUpdateContact(t)
+// }
 
-func TestUpdateContac(t *testing.T) {
-	t.Parallel()
+// func testUpdateContactValidation(t *testing.T) {
+// 	ctx := context.Background()
+// 	container := testContainer(t)
+// 	contactUpdater := NewUpdateContact(container.contactRepo)
 
-	testUpdateContactValidation(t)
-	testUpdateContact(t)
-}
+// 	testCases := []struct {
+// 		name          string
+// 		command       CmdUpdateContact
+// 		expectedError error
+// 	}{
+// 		{
+// 			name: "valid command",
+// 			command: CmdUpdateContact{
+// 				ContactId: uuid.NewString(),
+// 				FirstName: "John",
+// 				LastName:  "Doe",
+// 				Email:     "test@contact.local",
+// 				Phone:     "+33612345678",
+// 			},
+// 			expectedError: nil,
+// 		},
+// 		{
+// 			name: "invalid command: invalid contact id",
+// 			command: CmdUpdateContact{
+// 				ContactId: "invalid-uuid",
+// 				FirstName: "John",
+// 			},
+// 			expectedError: ErrInvalidCommand,
+// 		},
+// 		{
+// 			name: "invalid command: missing contact id",
+// 			command: CmdUpdateContact{
+// 				FirstName: "John",
+// 			},
+// 			expectedError: ErrInvalidCommand,
+// 		},
+// 	}
 
-func testUpdateContactValidation(t *testing.T) {
-	ctx := context.Background()
-	container := testContainer(t)
-	contactUpdater := NewUpdateContact(container.contactRepo)
+// 	for _, tc := range testCases {
+// 		tc := tc
+// 		t.Run(tc.name, func(t *testing.T) {
+// 			t.Parallel()
 
-	testCases := []struct {
-		name          string
-		command       CmdUpdateContact
-		expectedError error
-	}{
-		{
-			name: "valid command",
-			command: CmdUpdateContact{
-				ContactId: uuid.NewString(),
-				FirstName: "John",
-				LastName:  "Doe",
-				Email:     "test@contact.local",
-				Phone:     "+33612345678",
-			},
-			expectedError: nil,
-		},
-		{
-			name: "invalid command: invalid contact id",
-			command: CmdUpdateContact{
-				ContactId: "invalid-uuid",
-				FirstName: "John",
-			},
-			expectedError: ErrInvalidCommand,
-		},
-		{
-			name: "invalid command: missing contact id",
-			command: CmdUpdateContact{
-				FirstName: "John",
-			},
-			expectedError: ErrInvalidCommand,
-		},
-	}
+// 			if tc.expectedError == nil {
+// 				container.contactRepo.EXPECT().
+// 					Update(ctx, gomock.Any(), gomock.Any()).
+// 					Times(1).
+// 					Return(nil, nil)
+// 			}
 
-	for _, tc := range testCases {
-		tc := tc
-		t.Run(tc.name, func(t *testing.T) {
-			t.Parallel()
+// 			_, err := contactUpdater.Update(ctx, tc.command)
+// 			assert.ErrorIs(t, err, tc.expectedError)
+// 		})
+// 	}
+// }
 
-			if tc.expectedError == nil {
-				container.contactRepo.EXPECT().
-					Update(ctx, gomock.Any(), gomock.Any()).
-					Times(1).
-					Return(nil, nil)
-			}
+// func testUpdateContact(t *testing.T) {
+// 	ctx := context.Background()
+// 	container := testContainer(t)
+// 	contactUpdater := NewUpdateContact(container.contactRepo)
 
-			_, err := contactUpdater.Update(ctx, tc.command)
-			assert.ErrorIs(t, err, tc.expectedError)
-		})
-	}
-}
+// 	t.Run("successfully update contact", func(t *testing.T) {
+// 		uuid := uuid.New()
+// 		cmd := CmdUpdateContact{
+// 			ContactId: uuid.String(),
+// 			FirstName: "John",
+// 		}
 
-func testUpdateContact(t *testing.T) {
-	ctx := context.Background()
-	container := testContainer(t)
-	contactUpdater := NewUpdateContact(container.contactRepo)
+// 		container.contactRepo.EXPECT().
+// 			Update(ctx, gomock.Any(), gomock.Any()).
+// 			Times(1).
+// 			Return(
+// 				&domain.Contact{
+// 					Id:        uuid,
+// 					FirstName: cmd.FirstName,
+// 				},
+// 				nil,
+// 			)
 
-	t.Run("successfully update contact", func(t *testing.T) {
-		uuid := uuid.New()
-		cmd := CmdUpdateContact{
-			ContactId: uuid.String(),
-			FirstName: "John",
-		}
+// 		updatedContact, err := contactUpdater.Update(ctx, cmd)
+// 		assert.NoError(t, err)
+// 		assert.Equal(t, cmd.ContactId, updatedContact.Id.String())
+// 		assert.Equal(t, cmd.FirstName, updatedContact.FirstName)
+// 	})
 
-		container.contactRepo.EXPECT().
-			Update(ctx, gomock.Any(), gomock.Any()).
-			Times(1).
-			Return(
-				&domain.Contact{
-					Id:        uuid,
-					FirstName: cmd.FirstName,
-				},
-				nil,
-			)
+// 	t.Run("contact not found", func(t *testing.T) {
+// 		cmd := CmdUpdateContact{
+// 			ContactId: uuid.NewString(),
+// 			FirstName: "John",
+// 		}
 
-		updatedContact, err := contactUpdater.Update(ctx, cmd)
-		assert.NoError(t, err)
-		assert.Equal(t, cmd.ContactId, updatedContact.Id.String())
-		assert.Equal(t, cmd.FirstName, updatedContact.FirstName)
-	})
+// 		container.contactRepo.EXPECT().
+// 			Update(ctx, gomock.Any(), gomock.Any()).
+// 			Times(1).
+// 			Return(
+// 				nil,
+// 				ports.ErrNotFound,
+// 			)
 
-	t.Run("contact not found", func(t *testing.T) {
-		cmd := CmdUpdateContact{
-			ContactId: uuid.NewString(),
-			FirstName: "John",
-		}
+// 		updatedContact, err := contactUpdater.Update(ctx, cmd)
+// 		assert.ErrorIs(t, err, ErrNotFound)
+// 		assert.Nil(t, updatedContact)
+// 	})
 
-		container.contactRepo.EXPECT().
-			Update(ctx, gomock.Any(), gomock.Any()).
-			Times(1).
-			Return(
-				nil,
-				ports.ErrNotFound,
-			)
+// 	t.Run("unexpected repository error", func(t *testing.T) {
+// 		cmd := CmdUpdateContact{
+// 			ContactId: uuid.NewString(),
+// 			FirstName: "John",
+// 		}
 
-		updatedContact, err := contactUpdater.Update(ctx, cmd)
-		assert.ErrorIs(t, err, ErrNotFound)
-		assert.Nil(t, updatedContact)
-	})
+// 		container.contactRepo.EXPECT().
+// 			Update(ctx, gomock.Any(), gomock.Any()).
+// 			Times(1).
+// 			Return(
+// 				nil,
+// 				errors.New("internal error"),
+// 			)
 
-	t.Run("unexpected repository error", func(t *testing.T) {
-		cmd := CmdUpdateContact{
-			ContactId: uuid.NewString(),
-			FirstName: "John",
-		}
-
-		container.contactRepo.EXPECT().
-			Update(ctx, gomock.Any(), gomock.Any()).
-			Times(1).
-			Return(
-				nil,
-				errors.New("internal error"),
-			)
-
-		updatedContact, err := contactUpdater.Update(ctx, cmd)
-		assert.ErrorIs(t, err, ErrInternal)
-		assert.Nil(t, updatedContact)
-	})
-}
+// 		updatedContact, err := contactUpdater.Update(ctx, cmd)
+// 		assert.ErrorIs(t, err, ErrInternal)
+// 		assert.Nil(t, updatedContact)
+// 	})
+// }

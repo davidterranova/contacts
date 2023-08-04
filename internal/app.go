@@ -5,10 +5,15 @@ import (
 
 	"github.com/davidterranova/contacts/internal/domain"
 	"github.com/davidterranova/contacts/internal/usecase"
+	"github.com/davidterranova/contacts/pkg/eventsourcing"
 )
 
-type ContactRepository interface {
-	usecase.ContactRepository
+type ContactWriteModel interface {
+	eventsourcing.CommandHandler[*domain.Contact]
+}
+
+type ContactReadModel interface {
+	usecase.ContactLister
 }
 
 type ListContact interface {
@@ -34,12 +39,12 @@ type App struct {
 	deleteContact DeleteContact
 }
 
-func New(repo ContactRepository) *App {
+func New(writeModel ContactWriteModel, readModel ContactReadModel) *App {
 	return &App{
-		listContact:   usecase.NewListContact(repo),
-		createContact: usecase.NewCreateContact(repo),
-		updateContact: usecase.NewUpdateContact(repo),
-		deleteContact: usecase.NewDeleteContact(repo),
+		listContact:   usecase.NewListContact(readModel),
+		createContact: usecase.NewCreateContact(writeModel),
+		updateContact: usecase.NewUpdateContact(writeModel),
+		deleteContact: usecase.NewDeleteContact(writeModel),
 	}
 }
 

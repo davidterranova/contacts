@@ -9,15 +9,15 @@ import (
 type QueryListContact struct{}
 
 type ListContactHandler struct {
-	repo ContactRepository
+	lister ContactLister
 }
 
-func NewListContact(repo ContactRepository) ListContactHandler {
+func NewListContact(lister ContactLister) ListContactHandler {
 	return ListContactHandler{
-		repo: repo,
+		lister: lister,
 	}
 }
 
 func (h ListContactHandler) List(ctx context.Context, query QueryListContact) ([]*domain.Contact, error) {
-	return handleRepositoryError(h.repo.List(ctx))
+	return h.lister.List(ctx)
 }

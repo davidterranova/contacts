@@ -12,9 +12,11 @@ import (
 	"github.com/davidterranova/contacts/internal"
 	"github.com/davidterranova/contacts/internal/adapters/graphql"
 	lgrpc "github.com/davidterranova/contacts/internal/adapters/grpc"
+	"github.com/davidterranova/contacts/internal/domain"
+	"github.com/davidterranova/contacts/internal/ports"
 
 	ihttp "github.com/davidterranova/contacts/internal/adapters/http"
-	"github.com/davidterranova/contacts/internal/ports"
+	"github.com/davidterranova/contacts/pkg/eventsourcing"
 	"github.com/davidterranova/contacts/pkg/xhttp"
 	"github.com/gorilla/mux"
 	"github.com/rs/zerolog/log"
@@ -32,7 +34,18 @@ func runServer(cmd *cobra.Command, args []string) {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer cancel()
 
-	app := internal.New(ports.NewInMemoryContactRepository())
+	eventStream := eventsourcing.NewPublisher[*domain.Contact](context.Background(), 100)
+	eventStore := eventsourcing.NewEventStore[*domain.Contact]()
+	contactWriteModel := eventsourcing.NewCommandHandler[*domain.Contact](
+		eventStore,
+		eventStream,
+		func() *domain.Contact {
+			return &domain.Contact{}
+		},
+	)
+
+	contactReadModel := ports.NewInMemoryContactList(eventStream)
+	app := internal.New(contactWriteModel, contactReadModel)
 
 	go gqlAPIServer(ctx, app)
 	go httpAPIServer(ctx, app)

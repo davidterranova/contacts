@@ -5,10 +5,14 @@ import (
 	"fmt"
 
 	"github.com/davidterranova/contacts/internal/domain"
+	"github.com/davidterranova/contacts/pkg/eventsourcing"
 	"github.com/go-playground/validator"
+	uuid "github.com/google/uuid"
 )
 
 type CmdCreateContact struct {
+	eventsourcing.BaseCommand[*domain.Contact] `validate:"required"`
+
 	FirstName string `validate:"min=2,max=255"`
 	LastName  string `validate:"min=2,max=255"`
 	Email     string `validate:"required,email"`
@@ -16,14 +20,14 @@ type CmdCreateContact struct {
 }
 
 type CreateContact struct {
-	repo      ContactRepository
-	validator *validator.Validate
+	validator      *validator.Validate
+	commandHandler eventsourcing.CommandHandler[*domain.Contact]
 }
 
-func NewCreateContact(repo ContactRepository) CreateContact {
+func NewCreateContact(commandHandler eventsourcing.CommandHandler[*domain.Contact]) CreateContact {
 	return CreateContact{
-		repo:      repo,
-		validator: validator.New(),
+		commandHandler: commandHandler,
+		validator:      validator.New(),
 	}
 }
 
@@ -32,11 +36,32 @@ func (h CreateContact) Create(ctx context.Context, cmd CmdCreateContact) (*domai
 	if err != nil {
 		return nil, fmt.Errorf("%w: %s", ErrInvalidCommand, err)
 	}
-	contact := domain.New()
-	contact.FirstName = cmd.FirstName
-	contact.LastName = cmd.LastName
-	contact.Email = cmd.Email
-	contact.Phone = cmd.Phone
 
-	return handleRepositoryError(h.repo.Save(ctx, contact))
+	return h.commandHandler.Handle(cmd)
+}
+
+func NewCmdCreateContact(firstName, lastName, email, phone string) CmdCreateContact {
+	return CmdCreateContact{
+		BaseCommand: eventsourcing.NewBaseCommand[*domain.Contact](
+			uuid.New(),
+			domain.AggregateContact,
+		),
+		FirstName: firstName,
+		LastName:  lastName,
+		Email:     email,
+		Phone:     phone,
+	}
+}
+
+func (c CmdCreateContact) Apply(aggregate *domain.Contact) ([]eventsourcing.Event[*domain.Contact], error) {
+	if aggregate.AggregateId() != uuid.Nil {
+		return nil, eventsourcing.ErrAggregateAlreadyExists
+	}
+
+	return []eventsourcing.Event[*domain.Contact]{
+		domain.NewEvtContactCreated(c.AggregateId()),
+		domain.NewEvtContactEmailUpdated(c.AggregateId(), c.Email),
+		domain.NewEvtContactNameUpdated(c.AggregateId(), c.FirstName, c.LastName),
+		domain.NewEvtContactPhoneUpdated(c.AggregateId(), c.Phone),
+	}, nil
 }

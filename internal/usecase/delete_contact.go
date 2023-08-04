@@ -2,26 +2,28 @@ package usecase
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/davidterranova/contacts/internal/domain"
+	"github.com/davidterranova/contacts/pkg/eventsourcing"
 	"github.com/go-playground/validator"
 	uuid "github.com/google/uuid"
 )
 
 type CmdDeleteContact struct {
-	ContactId string `validate:"required,uuid"`
+	eventsourcing.BaseCommand[*domain.Contact] `validate:"required"`
 }
 
 type DeleteContactHandler struct {
-	repo      ContactRepository
-	validator *validator.Validate
+	validator      *validator.Validate
+	commandHandler eventsourcing.CommandHandler[*domain.Contact]
 }
 
-func NewDeleteContact(repo ContactRepository) DeleteContactHandler {
+func NewDeleteContact(commandHandler eventsourcing.CommandHandler[*domain.Contact]) DeleteContactHandler {
 	return DeleteContactHandler{
-		repo:      repo,
-		validator: validator.New(),
+		validator:      validator.New(),
+		commandHandler: commandHandler,
 	}
 }
 
@@ -31,11 +33,37 @@ func (h DeleteContactHandler) Delete(ctx context.Context, cmd CmdDeleteContact) 
 		return fmt.Errorf("%w: %s", ErrInvalidCommand, err)
 	}
 
-	contactUUID, err := uuid.Parse(cmd.ContactId)
-	if err != nil {
+	_, err = h.commandHandler.Handle(cmd)
+	switch {
+	case errors.Is(err, ErrNotFound):
+		return err
+	case errors.Is(err, eventsourcing.ErrAggregateNotFound):
 		return fmt.Errorf("%w: %s", ErrInvalidCommand, err)
+	case err != nil:
+		return fmt.Errorf("%w: %s", ErrInternal, err)
+	default:
+		return nil
+	}
+}
+
+func NewCmdDeleteContact(contactId uuid.UUID) CmdDeleteContact {
+	return CmdDeleteContact{
+		BaseCommand: eventsourcing.NewBaseCommand[*domain.Contact](
+			contactId,
+			domain.AggregateContact,
+		),
+	}
+}
+
+func (c CmdDeleteContact) Apply(aggregate *domain.Contact) ([]eventsourcing.Event[*domain.Contact], error) {
+	if aggregate.AggregateId() == uuid.Nil {
+		return nil, eventsourcing.ErrAggregateNotFound
+	}
+	if aggregate.DeletedAt != nil {
+		return nil, ErrNotFound
 	}
 
-	_, err = handleRepositoryError[*domain.Contact](nil, h.repo.Delete(ctx, contactUUID))
-	return err
+	return []eventsourcing.Event[*domain.Contact]{
+		domain.NewEvtContactDeleted(c.AggregateId()),
+	}, nil
 }
