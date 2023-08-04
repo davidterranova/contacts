@@ -34,8 +34,8 @@ func runServer(cmd *cobra.Command, args []string) {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer cancel()
 
-	eventStream := eventsourcing.NewPublisher[*domain.Contact](context.Background(), 100)
-	eventStore := eventsourcing.NewEventStore[*domain.Contact]()
+	eventStream := eventsourcing.NewInMemoryPublisher[*domain.Contact](context.Background(), 100)
+	eventStore := eventsourcing.NewInMemoryEventStore[*domain.Contact]()
 	contactWriteModel := eventsourcing.NewCommandHandler[*domain.Contact](
 		eventStore,
 		eventStream,

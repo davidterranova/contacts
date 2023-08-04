@@ -11,7 +11,7 @@ type eventStore[T Aggregate] struct {
 	storage map[uuid.UUID][]Event[T]
 }
 
-func NewEventStore[T Aggregate]() *eventStore[T] {
+func NewInMemoryEventStore[T Aggregate]() *eventStore[T] {
 	return &eventStore[T]{
 		storage: make(map[uuid.UUID][]Event[T]),
 	}

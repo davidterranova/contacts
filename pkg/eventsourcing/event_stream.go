@@ -27,7 +27,7 @@ type eventStream[T Aggregate] struct {
 	ctx         context.Context
 }
 
-func NewPublisher[T Aggregate](ctx context.Context, buffer int) *eventStream[T] {
+func NewInMemoryPublisher[T Aggregate](ctx context.Context, buffer int) *eventStream[T] {
 	p := &eventStream[T]{
 		ctx:         ctx,
 		stream:      make(chan Event[T], buffer),
