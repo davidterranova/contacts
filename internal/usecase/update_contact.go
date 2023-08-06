@@ -2,7 +2,6 @@ package usecase
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/davidterranova/contacts/internal/domain"
@@ -12,8 +11,7 @@ import (
 )
 
 type CmdUpdateContact struct {
-	eventsourcing.BaseCommand[*domain.Contact] `validate:"required"`
-
+	ContactId string `validate:"required,uuid"`
 	FirstName string `validate:"omitempty,min=2,max=255"`
 	LastName  string `validate:"omitempty,min=2,max=255"`
 	Email     string `validate:"omitempty,email"`
@@ -38,33 +36,31 @@ func (h UpdateContact) Update(ctx context.Context, cmd CmdUpdateContact) (*domai
 		return nil, fmt.Errorf("%w: %s", ErrInvalidCommand, err)
 	}
 
-	contact, err := h.commandHandler.Handle(cmd)
-	switch {
-	case errors.Is(err, ErrNotFound):
-		return nil, err
-	case errors.Is(err, eventsourcing.ErrAggregateNotFound):
+	uuid, err := uuid.Parse(cmd.ContactId)
+	if err != nil {
 		return nil, fmt.Errorf("%w: %s", ErrInvalidCommand, err)
-	case err != nil:
-		return nil, fmt.Errorf("%w: %s", ErrInternal, err)
-	default:
-		return contact, nil
 	}
+
+	checkedCmd := newCmdUpdateContact(uuid, cmd)
+	return handleErrs(h.commandHandler.Handle(checkedCmd))
 }
 
-func NewCmdUpdateContact(contactId uuid.UUID, firstName, lastName, email, phone string) CmdUpdateContact {
-	return CmdUpdateContact{
+type cmdUpdateContact struct {
+	eventsourcing.BaseCommand[*domain.Contact]
+	CmdUpdateContact
+}
+
+func newCmdUpdateContact(contactId uuid.UUID, data CmdUpdateContact) cmdUpdateContact {
+	return cmdUpdateContact{
 		BaseCommand: eventsourcing.NewBaseCommand[*domain.Contact](
 			contactId,
 			domain.AggregateContact,
 		),
-		FirstName: firstName,
-		LastName:  lastName,
-		Email:     email,
-		Phone:     phone,
+		CmdUpdateContact: data,
 	}
 }
 
-func (c CmdUpdateContact) Apply(aggregate *domain.Contact) ([]eventsourcing.Event[*domain.Contact], error) {
+func (c cmdUpdateContact) Apply(aggregate *domain.Contact) ([]eventsourcing.Event[*domain.Contact], error) {
 	if aggregate.AggregateId() == uuid.Nil {
 		return nil, eventsourcing.ErrAggregateNotFound
 	}

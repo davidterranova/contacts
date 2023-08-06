@@ -2,11 +2,9 @@ package grpc
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/davidterranova/contacts/internal/domain"
 	"github.com/davidterranova/contacts/internal/usecase"
-	"github.com/google/uuid"
 )
 
 const layout = "2006-01-02T15:04:05Z"
@@ -42,12 +40,12 @@ func (h *Handler) ListContacts(ctx context.Context, req *ListContactsRequest) (*
 func (h *Handler) CreateContact(ctx context.Context, req *CreateContactRequest) (*CreateContactResponse, error) {
 	contact, err := h.app.CreateContact(
 		ctx,
-		usecase.NewCmdCreateContact(
-			req.FirstName,
-			req.LastName,
-			req.Email,
-			req.Phone,
-		),
+		usecase.CmdCreateContact{
+			FirstName: req.FirstName,
+			LastName:  req.LastName,
+			Email:     req.Email,
+			Phone:     req.Phone,
+		},
 	)
 	if err != nil {
 		return nil, err
@@ -59,20 +57,15 @@ func (h *Handler) CreateContact(ctx context.Context, req *CreateContactRequest) 
 }
 
 func (h *Handler) UpdateContact(ctx context.Context, req *UpdateContactRequest) (*UpdateContactResponse, error) {
-	contactId, err := uuid.Parse(req.Id)
-	if err != nil {
-		return nil, fmt.Errorf("invalid resource uuid: %s", err)
-	}
-
 	contact, err := h.app.UpdateContact(
 		ctx,
-		usecase.NewCmdUpdateContact(
-			contactId,
-			req.FirstName,
-			req.LastName,
-			req.Email,
-			req.Phone,
-		),
+		usecase.CmdUpdateContact{
+			ContactId: req.Id,
+			FirstName: req.FirstName,
+			LastName:  req.LastName,
+			Email:     req.Email,
+			Phone:     req.Phone,
+		},
 	)
 	if err != nil {
 		return nil, err
@@ -84,14 +77,9 @@ func (h *Handler) UpdateContact(ctx context.Context, req *UpdateContactRequest) 
 }
 
 func (h *Handler) DeleteContact(ctx context.Context, req *DeleteContactRequest) (*DeleteContactResponse, error) {
-	contactId, err := uuid.Parse(req.Id)
-	if err != nil {
-		return nil, fmt.Errorf("invalid resource uuid: %s", err)
-	}
-
-	err = h.app.DeleteContact(
+	err := h.app.DeleteContact(
 		ctx,
-		usecase.NewCmdDeleteContact(contactId),
+		usecase.CmdDeleteContact{ContactId: req.Id},
 	)
 
 	return nil, err

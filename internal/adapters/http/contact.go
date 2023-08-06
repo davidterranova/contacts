@@ -10,7 +10,6 @@ import (
 	"github.com/davidterranova/contacts/internal/domain"
 	"github.com/davidterranova/contacts/internal/usecase"
 	"github.com/davidterranova/contacts/pkg/xhttp"
-	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/rs/zerolog/log"
 )
@@ -66,12 +65,12 @@ func (h *ContactHandler) Create(w http.ResponseWriter, r *http.Request) {
 
 	contact, err := h.app.CreateContact(
 		ctx,
-		usecase.NewCmdCreateContact(
-			req.FirstName,
-			req.LastName,
-			req.Email,
-			req.Phone,
-		),
+		usecase.CmdCreateContact{
+			FirstName: req.FirstName,
+			LastName:  req.LastName,
+			Email:     req.Email,
+			Phone:     req.Phone,
+		},
 	)
 	if err != nil {
 		switch {
@@ -98,13 +97,9 @@ type updateContactRequest struct {
 func (h *ContactHandler) Update(w http.ResponseWriter, r *http.Request) {
 	var req updateContactRequest
 	ctx := r.Context()
-	contactId, err := uuid.Parse(mux.Vars(r)[pathContactId])
-	if err != nil {
-		xhttp.WriteError(ctx, w, http.StatusBadRequest, "invalid resource uuid", err)
-		return
-	}
+	contactId := mux.Vars(r)[pathContactId]
 
-	err = json.NewDecoder(r.Body).Decode(&req)
+	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
 		log.Ctx(ctx).Warn().Err(err).Msg("user_contacts:update failed to decode request")
 		xhttp.WriteError(ctx, w, http.StatusBadRequest, "failed to decode request", err)
@@ -113,13 +108,13 @@ func (h *ContactHandler) Update(w http.ResponseWriter, r *http.Request) {
 
 	contact, err := h.app.UpdateContact(
 		ctx,
-		usecase.NewCmdUpdateContact(
-			contactId,
-			req.FirstName,
-			req.LastName,
-			req.Email,
-			req.Phone,
-		),
+		usecase.CmdUpdateContact{
+			ContactId: contactId,
+			FirstName: req.FirstName,
+			LastName:  req.LastName,
+			Email:     req.Email,
+			Phone:     req.Phone,
+		},
 	)
 	if err != nil {
 		switch {
@@ -140,13 +135,9 @@ func (h *ContactHandler) Update(w http.ResponseWriter, r *http.Request) {
 
 func (h *ContactHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	contactId, err := uuid.Parse(mux.Vars(r)[pathContactId])
-	if err != nil {
-		xhttp.WriteError(ctx, w, http.StatusBadRequest, "invalid resource uuid", err)
-		return
-	}
+	contactId := mux.Vars(r)[pathContactId]
 
-	err = h.app.DeleteContact(ctx, usecase.NewCmdDeleteContact(contactId))
+	err := h.app.DeleteContact(ctx, usecase.CmdDeleteContact{ContactId: contactId})
 	if err != nil {
 		switch {
 		case errors.Is(err, usecase.ErrInvalidCommand):

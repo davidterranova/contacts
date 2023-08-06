@@ -12,7 +12,7 @@ import (
 )
 
 type CmdDeleteContact struct {
-	eventsourcing.BaseCommand[*domain.Contact] `validate:"required"`
+	ContactId string `validate:"required,uuid"`
 }
 
 type DeleteContactHandler struct {
@@ -33,7 +33,12 @@ func (h DeleteContactHandler) Delete(ctx context.Context, cmd CmdDeleteContact) 
 		return fmt.Errorf("%w: %s", ErrInvalidCommand, err)
 	}
 
-	_, err = h.commandHandler.Handle(cmd)
+	uuid, err := uuid.Parse(cmd.ContactId)
+	if err != nil {
+		return fmt.Errorf("%w: %s", ErrInvalidCommand, err)
+	}
+
+	_, err = h.commandHandler.Handle(newCmdDeleteContact(uuid))
 	switch {
 	case errors.Is(err, ErrNotFound):
 		return err
@@ -46,8 +51,12 @@ func (h DeleteContactHandler) Delete(ctx context.Context, cmd CmdDeleteContact) 
 	}
 }
 
-func NewCmdDeleteContact(contactId uuid.UUID) CmdDeleteContact {
-	return CmdDeleteContact{
+type cmdDeleteContact struct {
+	eventsourcing.BaseCommand[*domain.Contact]
+}
+
+func newCmdDeleteContact(contactId uuid.UUID) cmdDeleteContact {
+	return cmdDeleteContact{
 		BaseCommand: eventsourcing.NewBaseCommand[*domain.Contact](
 			contactId,
 			domain.AggregateContact,
@@ -55,7 +64,7 @@ func NewCmdDeleteContact(contactId uuid.UUID) CmdDeleteContact {
 	}
 }
 
-func (c CmdDeleteContact) Apply(aggregate *domain.Contact) ([]eventsourcing.Event[*domain.Contact], error) {
+func (c cmdDeleteContact) Apply(aggregate *domain.Contact) ([]eventsourcing.Event[*domain.Contact], error) {
 	if aggregate.AggregateId() == uuid.Nil {
 		return nil, eventsourcing.ErrAggregateNotFound
 	}

@@ -16,27 +16,27 @@ type Command[T Aggregate] interface {
 }
 
 type BaseCommand[T Aggregate] struct {
-	aggregateId   uuid.UUID     `validate:"required"`
-	aggregateType AggregateType `validate:"required"`
-	createdAt     time.Time     `validate:"required"`
+	BCAggregateId   uuid.UUID     `validate:"required"`
+	BCAggregateType AggregateType `validate:"required"`
+	BCCreatedAt     time.Time     `validate:"required"`
 }
 
 func NewBaseCommand[T Aggregate](aggregateId uuid.UUID, aggregateType AggregateType) BaseCommand[T] {
 	return BaseCommand[T]{
-		aggregateId:   aggregateId,
-		aggregateType: aggregateType,
-		createdAt:     time.Now().UTC(),
+		BCAggregateId:   aggregateId,
+		BCAggregateType: aggregateType,
+		BCCreatedAt:     time.Now().UTC(),
 	}
 }
 
 func (c BaseCommand[T]) AggregateId() uuid.UUID {
-	return c.aggregateId
+	return c.BCAggregateId
 }
 
 func (c BaseCommand[T]) AggregateType() AggregateType {
-	return c.aggregateType
+	return c.BCAggregateType
 }
 
 func (c BaseCommand[T]) CreatedAt() time.Time {
-	return c.createdAt
+	return c.BCCreatedAt
 }

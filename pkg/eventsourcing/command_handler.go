@@ -11,10 +11,10 @@ type CommandHandler[T Aggregate] interface {
 	Handle(Command[T]) (T, error)
 
 	// HydrateAggregate an aggregate from already published events (internal)
-	HydrateAggregate(aggregateType AggregateType, aggregateId uuid.UUID) (T, error)
+	// HydrateAggregate(aggregateType AggregateType, aggregateId uuid.UUID) (T, error)
 
 	// Apply checks command validity for an aggregate and return newly emitted events (internal)
-	Apply(aggregate T, command Command[T]) (T, []Event[T], error)
+	// Apply(aggregate T, command Command[T]) (T, []Event[T], error)
 }
 
 type AggregateFactory[T Aggregate] func() T

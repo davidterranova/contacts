@@ -11,8 +11,6 @@ import (
 )
 
 type CmdCreateContact struct {
-	eventsourcing.BaseCommand[*domain.Contact] `validate:"required"`
-
 	FirstName string `validate:"min=2,max=255"`
 	LastName  string `validate:"min=2,max=255"`
 	Email     string `validate:"required,email"`
@@ -37,23 +35,26 @@ func (h CreateContact) Create(ctx context.Context, cmd CmdCreateContact) (*domai
 		return nil, fmt.Errorf("%w: %s", ErrInvalidCommand, err)
 	}
 
-	return h.commandHandler.Handle(cmd)
+	checkedCmd := newCmdCreateContact(cmd)
+	return handleErrs(h.commandHandler.Handle(checkedCmd))
 }
 
-func NewCmdCreateContact(firstName, lastName, email, phone string) CmdCreateContact {
-	return CmdCreateContact{
+type cmdCreateContact struct {
+	eventsourcing.BaseCommand[*domain.Contact]
+	CmdCreateContact
+}
+
+func newCmdCreateContact(data CmdCreateContact) cmdCreateContact {
+	return cmdCreateContact{
 		BaseCommand: eventsourcing.NewBaseCommand[*domain.Contact](
 			uuid.New(),
 			domain.AggregateContact,
 		),
-		FirstName: firstName,
-		LastName:  lastName,
-		Email:     email,
-		Phone:     phone,
+		CmdCreateContact: data,
 	}
 }
 
-func (c CmdCreateContact) Apply(aggregate *domain.Contact) ([]eventsourcing.Event[*domain.Contact], error) {
+func (c cmdCreateContact) Apply(aggregate *domain.Contact) ([]eventsourcing.Event[*domain.Contact], error) {
 	if aggregate.AggregateId() != uuid.Nil {
 		return nil, eventsourcing.ErrAggregateAlreadyExists
 	}
