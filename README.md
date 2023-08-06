@@ -1,11 +1,13 @@
 # Contacts store
 This is a very basic contacts store used as a training project to highlight architectures principles
+- CLEAN architecture on [main](https://github.com/davidterranova/contacts/tree/main) branch
+- CQRS on [cqrs](https://github.com/davidterranova/contacts/tree/cqrs) branch
 
 ## WARNING
-The store is not thread safe!
+The store is not thread safe and in-memory
 
 # Highlights
-- SOLID
+- SOLID/CQRS principles
 - Clean architecture
 - Clear separation of concerns, layers
 - Simple code to read and extend (no complex logic here thought). Quick new member onboarding. 
