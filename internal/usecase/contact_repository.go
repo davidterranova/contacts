@@ -12,6 +12,10 @@ import (
 type ContactRepository interface {
 	List(ctx context.Context) ([]*domain.Contact, error)
 	Save(ctx context.Context, contact *domain.Contact) (*domain.Contact, error)
+
+	// Update with "Repository pattern" making a clean separation of concerns
+	// between the use case and the persistence layer
+	// while pushing atomicity to the persistence layer
 	Update(ctx context.Context, id uuid.UUID, updateFn func(c domain.Contact) (domain.Contact, error)) (*domain.Contact, error)
 	Delete(ctx context.Context, id uuid.UUID) error
 }
