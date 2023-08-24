@@ -7,10 +7,6 @@ import (
 	"github.com/davidterranova/contacts/internal/usecase"
 )
 
-type ContactRepository interface {
-	usecase.ContactRepository
-}
-
 type ListContact interface {
 	List(ctx context.Context, query usecase.QueryListContact) ([]*domain.Contact, error)
 }
@@ -34,7 +30,7 @@ type App struct {
 	deleteContact DeleteContact
 }
 
-func New(repo ContactRepository) *App {
+func New(repo usecase.ContactRepository) *App {
 	return &App{
 		listContact:   usecase.NewListContact(repo),
 		createContact: usecase.NewCreateContact(repo),
