@@ -7,13 +7,20 @@ This is a very basic contacts store used as a training project to highlight arch
 The store is not thread safe and in-memory
 
 # Highlights
-- SOLID/CQRS principles
-- Clean architecture
-- Clear separation of concerns, layers
-- Simple code to read and extend (no complex logic here thought). Quick new member onboarding. 
-- Unit tested on key layers without the need to instantiate other layers (possibility to cover more layers, like the API for example)
-- DRY
-- Self documented
+- Stateless presenters API: easily scalable, no session management
+- Free from storage constraints: SQL, NoSQL, in-memory, ...
+- Clean architecture: cost effective, maintainable, testable, free from framework, with a clear separation of concerns and layers dependencies order
+  
+  ![Clean architecture diagram](./docs/clean_architecture.png)
+- CQRS principles: Commqnd Query Responsibility Segregation
+  
+  ![CQRS diagram](./docs/cqrs.png)
+- SOLID
+  - Single responsibility principle: each layer has a single responsibility
+  - Open/closed principle: each layer is open for extension but closed for modification
+  - Liskov substitution principle: each layer can be replaced by another one without breaking the system
+  - Interface segregation principle: each layer has its own interface
+  - Dependency inversion principle: each layer depends on abstraction, not on concretions
 
 # Run
 
@@ -24,7 +31,7 @@ go run main.go server
 # Dev install
 
 ## Protobuff
-Install protobuff
+Install protobuff (OSX)
 
 https://github.com/protocolbuffers/protobuf
 
