@@ -51,18 +51,18 @@ func (mr *MockContactRepositoryMockRecorder) Delete(arg0, arg1 interface{}) *gom
 }
 
 // List mocks base method.
-func (m *MockContactRepository) List(arg0 context.Context) ([]*domain.Contact, error) {
+func (m *MockContactRepository) List(arg0 context.Context, arg1 Filter) ([]*domain.Contact, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "List", arg0)
+	ret := m.ctrl.Call(m, "List", arg0, arg1)
 	ret0, _ := ret[0].([]*domain.Contact)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // List indicates an expected call of List.
-func (mr *MockContactRepositoryMockRecorder) List(arg0 interface{}) *gomock.Call {
+func (mr *MockContactRepositoryMockRecorder) List(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockContactRepository)(nil).List), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockContactRepository)(nil).List), arg0, arg1)
 }
 
 // Save mocks base method.

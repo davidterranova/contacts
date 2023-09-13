@@ -6,9 +6,12 @@ import (
 
 	"github.com/davidterranova/contacts/internal/domain"
 	"github.com/go-playground/validator"
+	uuid "github.com/google/uuid"
 )
 
 type CmdCreateContact struct {
+	CreatedBy string `validate:"required,uuid"`
+
 	FirstName string `validate:"min=2,max=255"`
 	LastName  string `validate:"min=2,max=255"`
 	Email     string `validate:"required,email"`
@@ -32,7 +35,13 @@ func (h CreateContact) Create(ctx context.Context, cmd CmdCreateContact) (*domai
 	if err != nil {
 		return nil, fmt.Errorf("%w: %s", ErrInvalidCommand, err)
 	}
-	contact := domain.New()
+
+	createdBy, err := uuid.Parse(cmd.CreatedBy)
+	if err != nil {
+		return nil, fmt.Errorf("%w: %s", ErrInvalidCommand, err)
+	}
+
+	contact := domain.New(createdBy)
 	contact.FirstName = cmd.FirstName
 	contact.LastName = cmd.LastName
 	contact.Email = cmd.Email

@@ -16,6 +16,31 @@ type InMemoryContactRepository struct {
 	contacts map[uuid.UUID]*domain.Contact
 }
 
+type filter struct {
+	createdBy *uuid.UUID
+}
+
+func (f *filter) CreatedBy() *uuid.UUID {
+	return f.createdBy
+}
+
+func WithCreatedBy(id uuid.UUID) withFilter {
+	return func(f *filter) {
+		f.createdBy = &id
+	}
+}
+
+type withFilter func(f *filter)
+
+func NewFilter(filters ...withFilter) *filter {
+	filter := &filter{}
+	for _, f := range filters {
+		f(filter)
+	}
+
+	return filter
+}
+
 func NewInMemoryContactRepository() *InMemoryContactRepository {
 	return &InMemoryContactRepository{
 		contacts: map[uuid.UUID]*domain.Contact{},
@@ -31,13 +56,23 @@ func (r *InMemoryContactRepository) Get(_ context.Context, id uuid.UUID) (*domai
 	return contact, nil
 }
 
-func (r *InMemoryContactRepository) List(ctx context.Context) ([]*domain.Contact, error) {
+func (r *InMemoryContactRepository) List(ctx context.Context, filter filter) ([]*domain.Contact, error) {
 	contacts := make([]*domain.Contact, 0, len(r.contacts))
 	for _, contact := range r.contacts {
-		contacts = append(contacts, contact)
+		if !fiterBy(filter, contact) {
+			contacts = append(contacts, contact)
+		}
 	}
 
 	return contacts, nil
+}
+
+func fiterBy(filter filter, contact *domain.Contact) bool {
+	if filter.createdBy != nil && *filter.createdBy != contact.CreatedBy {
+		return false
+	}
+
+	return true
 }
 
 func (r *InMemoryContactRepository) Save(_ context.Context, contact *domain.Contact) (*domain.Contact, error) {

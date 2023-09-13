@@ -43,6 +43,7 @@ func testCreateContactValidation(t *testing.T) {
 		{
 			name: "valid command",
 			command: CmdCreateContact{
+				CreatedBy: "b3900a81-6f89-41e0-af80-8a6ca16c9c6a",
 				FirstName: "John",
 				LastName:  "Doe",
 				Email:     "test@contact.local",
@@ -53,6 +54,7 @@ func testCreateContactValidation(t *testing.T) {
 		{
 			name: "invalid command: missing email address",
 			command: CmdCreateContact{
+				CreatedBy: "b3900a81-6f89-41e0-af80-8a6ca16c9c6a",
 				FirstName: "John",
 				LastName:  "Doe",
 				Phone:     "+33612345678",
@@ -62,6 +64,18 @@ func testCreateContactValidation(t *testing.T) {
 		{
 			name: "invalid command: invalid phone number",
 			command: CmdCreateContact{
+				CreatedBy: "b3900a81-6f89-41e0-af80-8a6ca16c9c6a",
+				FirstName: "John",
+				LastName:  "Doe",
+				Email:     "test@contact.local",
+				Phone:     "0612345678",
+			},
+			expectedError: ErrInvalidCommand,
+		},
+		{
+			name: "invalid command: invalid uuid",
+			command: CmdCreateContact{
+				CreatedBy: "invalid-uuid",
 				FirstName: "John",
 				LastName:  "Doe",
 				Email:     "test@contact.local",
@@ -96,6 +110,7 @@ func testCreateContact(t *testing.T) {
 
 	t.Run("successful contact creation", func(t *testing.T) {
 		cmd := CmdCreateContact{
+			CreatedBy: "b3900a81-6f89-41e0-af80-8a6ca16c9c6a",
 			FirstName: "John",
 			LastName:  "Doe",
 			Email:     "jdoe@contact.local",
@@ -125,6 +140,7 @@ func testCreateContact(t *testing.T) {
 
 	t.Run("repository unexpected error", func(t *testing.T) {
 		cmd := CmdCreateContact{
+			CreatedBy: "b3900a81-6f89-41e0-af80-8a6ca16c9c6a",
 			FirstName: "John",
 			LastName:  "Doe",
 			Email:     "jdoe@contact.local",

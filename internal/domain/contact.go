@@ -12,18 +12,21 @@ type Contact struct {
 	CreatedAt time.Time
 	UpdatedAt time.Time
 
+	CreatedBy uuid.UUID
+
 	FirstName string
 	LastName  string
 	Email     string
 	Phone     string
 }
 
-func New() *Contact {
+func New(createdBy uuid.UUID) *Contact {
 	now := time.Now().UTC()
 
 	return &Contact{
 		Id:        uuid.New(),
 		CreatedAt: now,
 		UpdatedAt: now,
+		CreatedBy: createdBy,
 	}
 }

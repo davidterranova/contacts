@@ -9,8 +9,12 @@ import (
 	uuid "github.com/google/uuid"
 )
 
+type Filter interface {
+	CreatedBy() *uuid.UUID
+}
+
 type ContactRepository interface {
-	List(ctx context.Context) ([]*domain.Contact, error)
+	List(ctx context.Context, filter Filter) ([]*domain.Contact, error)
 	Save(ctx context.Context, contact *domain.Contact) (*domain.Contact, error)
 
 	// Update with "Repository pattern" making a clean separation of concerns
