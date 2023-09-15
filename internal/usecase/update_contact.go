@@ -11,11 +11,12 @@ import (
 )
 
 type CmdUpdateContact struct {
-	ContactId string `validate:"required,uuid"`
-	FirstName string `validate:"omitempty,min=2,max=255"`
-	LastName  string `validate:"omitempty,min=2,max=255"`
-	Email     string `validate:"omitempty,email"`
-	Phone     string `validate:"omitempty,e164"` // https://en.wikipedia.org/wiki/E.164
+	Updater   domain.User `validate:"required"`
+	ContactId string      `validate:"required,uuid"`
+	FirstName string      `validate:"omitempty,min=2,max=255"`
+	LastName  string      `validate:"omitempty,min=2,max=255"`
+	Email     string      `validate:"omitempty,email"`
+	Phone     string      `validate:"omitempty,e164"` // https://en.wikipedia.org/wiki/E.164
 }
 
 type UpdateContact struct {
@@ -42,34 +43,42 @@ func (h UpdateContact) Update(ctx context.Context, cmd CmdUpdateContact) (*domai
 	}
 
 	contact, err := h.repo.Update(ctx, contactUUID, func(c domain.Contact) (domain.Contact, error) {
-		updated := false
-
-		if cmd.FirstName != "" {
-			updated = true
-			c.FirstName = cmd.FirstName
-		}
-
-		if cmd.LastName != "" {
-			updated = true
-			c.LastName = cmd.LastName
-		}
-
-		if cmd.Email != "" {
-			updated = true
-			c.Email = cmd.Email
-		}
-
-		if cmd.Phone != "" {
-			updated = true
-			c.Phone = cmd.Phone
-		}
-
-		if updated {
-			c.UpdatedAt = time.Now().UTC()
-		}
-
-		return c, nil
+		return updateContactFn(c, cmd)
 	})
 
 	return handleRepositoryError(contact, err)
+}
+
+func updateContactFn(c domain.Contact, cmd CmdUpdateContact) (domain.Contact, error) {
+	updated := false
+
+	if c.CreatedBy != cmd.Updater.Id {
+		return c, fmt.Errorf("%w: %s", ErrForbidden, "contact can only be updated by its creator")
+	}
+
+	if cmd.FirstName != "" {
+		updated = true
+		c.FirstName = cmd.FirstName
+	}
+
+	if cmd.LastName != "" {
+		updated = true
+		c.LastName = cmd.LastName
+	}
+
+	if cmd.Email != "" {
+		updated = true
+		c.Email = cmd.Email
+	}
+
+	if cmd.Phone != "" {
+		updated = true
+		c.Phone = cmd.Phone
+	}
+
+	if updated {
+		c.UpdatedAt = time.Now().UTC()
+	}
+
+	return c, nil
 }
