@@ -15,6 +15,7 @@ import (
 
 	ihttp "github.com/davidterranova/contacts/internal/adapters/http"
 	"github.com/davidterranova/contacts/internal/ports"
+	"github.com/davidterranova/contacts/pkg/xgrpc"
 	"github.com/davidterranova/contacts/pkg/xhttp"
 	"github.com/gorilla/mux"
 	"github.com/rs/zerolog/log"
@@ -22,11 +23,15 @@ import (
 	"google.golang.org/grpc"
 )
 
-var serverCmd = &cobra.Command{
-	Use:   "server",
-	Short: "starts contacts server",
-	Run:   runServer,
-}
+var (
+	serverCmd = &cobra.Command{
+		Use:   "server",
+		Short: "starts contacts server",
+		Run:   runServer,
+	}
+	basicAuthUsername = "admin"
+	basicAuthPassword = "admin"
+)
 
 func runServer(cmd *cobra.Command, args []string) {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
@@ -48,7 +53,10 @@ func runServer(cmd *cobra.Command, args []string) {
 }
 
 func httpAPIServer(ctx context.Context, app *internal.App) {
-	router := ihttp.New(app)
+	router := ihttp.New(
+		app,
+		xhttp.BasicAuthFn(basicAuthUsername, basicAuthPassword),
+	)
 	server := xhttp.NewServer(router, "", 8080)
 
 	err := server.Serve(ctx)
@@ -58,9 +66,20 @@ func httpAPIServer(ctx context.Context, app *internal.App) {
 }
 
 func gqlAPIServer(ctx context.Context, app *internal.App) {
-	srv := handler.NewDefaultServer(graphql.NewExecutableSchema(graphql.Config{Resolvers: graphql.NewResolver(app)}))
+	srv := handler.NewDefaultServer(
+		graphql.NewExecutableSchema(
+			graphql.Config{
+				Resolvers: graphql.NewResolver(app),
+			},
+		),
+	)
 	root := mux.NewRouter()
-	root.Handle("/query", srv)
+	root.Handle(
+		"/query",
+		xhttp.AuthMiddleware(
+			xhttp.BasicAuthFn(basicAuthUsername, basicAuthPassword),
+		)(srv),
+	)
 	root.Handle("/", playground.Handler("GraphQL playground", "/query"))
 	server := xhttp.NewServer(root, "", 8181)
 
@@ -76,7 +95,11 @@ func grpcServer(ctx context.Context, app *internal.App) {
 		log.Ctx(ctx).Panic().Err(err).Msg("failed to listen GRPC port")
 	}
 
-	var opts []grpc.ServerOption
+	var opts []grpc.ServerOption = []grpc.ServerOption{
+		grpc.UnaryInterceptor(
+			xgrpc.BasicAuthMiddleware(basicAuthUsername, basicAuthPassword),
+		),
+	}
 	grpcServer := grpc.NewServer(opts...)
 	lgrpc.RegisterContactsServer(grpcServer, lgrpc.NewHandler(app))
 	log.Ctx(ctx).Info().Str("address", ":8282").Msg("starting GRPC server")
