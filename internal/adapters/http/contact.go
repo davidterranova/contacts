@@ -9,6 +9,7 @@ import (
 
 	"github.com/davidterranova/contacts/internal/domain"
 	"github.com/davidterranova/contacts/internal/usecase"
+	"github.com/davidterranova/contacts/pkg/auth"
 	"github.com/davidterranova/contacts/pkg/xhttp"
 	"github.com/gorilla/mux"
 	"github.com/rs/zerolog/log"
@@ -33,8 +34,16 @@ func NewContactHandler(app App) *ContactHandler {
 
 func (h *ContactHandler) List(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+	user, err := auth.UserFromContext(ctx)
+	if err != nil {
+		log.Ctx(ctx).Warn().Err(err).Msg("user_contacts:list failed to get user from context")
+		xhttp.WriteError(ctx, w, http.StatusInternalServerError, "failed to get user from context", err)
+		return
+	}
 
-	contacts, err := h.app.ListContacts(ctx, usecase.QueryListContact{})
+	contacts, err := h.app.ListContacts(ctx, usecase.QueryListContact{
+		CreatedBy: user,
+	})
 	if err != nil {
 		log.Ctx(ctx).Warn().Err(err).Msg("user_contacts:list failed to list contacts")
 		xhttp.WriteError(ctx, w, http.StatusInternalServerError, "failed to list contacts", err)
@@ -55,8 +64,14 @@ type createContactRequest struct {
 func (h *ContactHandler) Create(w http.ResponseWriter, r *http.Request) {
 	var req createContactRequest
 	ctx := r.Context()
+	user, err := auth.UserFromContext(ctx)
+	if err != nil {
+		log.Ctx(ctx).Warn().Err(err).Msg("user_contacts:list failed to get user from context")
+		xhttp.WriteError(ctx, w, http.StatusInternalServerError, "failed to get user from context", err)
+		return
+	}
 
-	err := json.NewDecoder(r.Body).Decode(&req)
+	err = json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
 		log.Ctx(ctx).Warn().Err(err).Msg("user_contacts:create failed to decode request")
 		xhttp.WriteError(ctx, w, http.StatusBadRequest, "failed to decode request", err)
@@ -66,6 +81,7 @@ func (h *ContactHandler) Create(w http.ResponseWriter, r *http.Request) {
 	contact, err := h.app.CreateContact(
 		ctx,
 		usecase.CmdCreateContact{
+			CreatedBy: user,
 			FirstName: req.FirstName,
 			LastName:  req.LastName,
 			Email:     req.Email,
@@ -98,8 +114,14 @@ func (h *ContactHandler) Update(w http.ResponseWriter, r *http.Request) {
 	var req updateContactRequest
 	ctx := r.Context()
 	contactId := mux.Vars(r)[pathContactId]
+	user, err := auth.UserFromContext(ctx)
+	if err != nil {
+		log.Ctx(ctx).Warn().Err(err).Msg("user_contacts:list failed to get user from context")
+		xhttp.WriteError(ctx, w, http.StatusInternalServerError, "failed to get user from context", err)
+		return
+	}
 
-	err := json.NewDecoder(r.Body).Decode(&req)
+	err = json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
 		log.Ctx(ctx).Warn().Err(err).Msg("user_contacts:update failed to decode request")
 		xhttp.WriteError(ctx, w, http.StatusBadRequest, "failed to decode request", err)
@@ -109,6 +131,7 @@ func (h *ContactHandler) Update(w http.ResponseWriter, r *http.Request) {
 	contact, err := h.app.UpdateContact(
 		ctx,
 		usecase.CmdUpdateContact{
+			Updater:   user,
 			ContactId: contactId,
 			FirstName: req.FirstName,
 			LastName:  req.LastName,
@@ -136,8 +159,17 @@ func (h *ContactHandler) Update(w http.ResponseWriter, r *http.Request) {
 func (h *ContactHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	contactId := mux.Vars(r)[pathContactId]
+	user, err := auth.UserFromContext(ctx)
+	if err != nil {
+		log.Ctx(ctx).Warn().Err(err).Msg("user_contacts:list failed to get user from context")
+		xhttp.WriteError(ctx, w, http.StatusInternalServerError, "failed to get user from context", err)
+		return
+	}
 
-	err := h.app.DeleteContact(ctx, usecase.CmdDeleteContact{ContactId: contactId})
+	err = h.app.DeleteContact(ctx, usecase.CmdDeleteContact{
+		Deleter:   user,
+		ContactId: contactId,
+	})
 	if err != nil {
 		switch {
 		case errors.Is(err, usecase.ErrInvalidCommand):
