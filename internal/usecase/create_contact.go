@@ -9,6 +9,8 @@ import (
 )
 
 type CmdCreateContact struct {
+	CreatedBy domain.User `validate:"required"`
+
 	FirstName string `validate:"min=2,max=255"`
 	LastName  string `validate:"min=2,max=255"`
 	Email     string `validate:"required,email"`
@@ -32,11 +34,12 @@ func (h CreateContact) Create(ctx context.Context, cmd CmdCreateContact) (*domai
 	if err != nil {
 		return nil, fmt.Errorf("%w: %s", ErrInvalidCommand, err)
 	}
-	contact := domain.New()
+
+	contact := domain.New(cmd.CreatedBy.Id)
 	contact.FirstName = cmd.FirstName
 	contact.LastName = cmd.LastName
 	contact.Email = cmd.Email
 	contact.Phone = cmd.Phone
 
-	return handleRepositoryError(h.repo.Save(ctx, contact))
+	return handleRepositoryError(h.repo.Create(ctx, contact))
 }

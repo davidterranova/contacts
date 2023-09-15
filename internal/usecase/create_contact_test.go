@@ -7,6 +7,7 @@ import (
 
 	"github.com/davidterranova/contacts/internal/domain"
 	"github.com/golang/mock/gomock"
+	uuid "github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -43,6 +44,7 @@ func testCreateContactValidation(t *testing.T) {
 		{
 			name: "valid command",
 			command: CmdCreateContact{
+				CreatedBy: *domain.NewUser(uuid.New()),
 				FirstName: "John",
 				LastName:  "Doe",
 				Email:     "test@contact.local",
@@ -53,6 +55,7 @@ func testCreateContactValidation(t *testing.T) {
 		{
 			name: "invalid command: missing email address",
 			command: CmdCreateContact{
+				CreatedBy: *domain.NewUser(uuid.New()),
 				FirstName: "John",
 				LastName:  "Doe",
 				Phone:     "+33612345678",
@@ -62,6 +65,18 @@ func testCreateContactValidation(t *testing.T) {
 		{
 			name: "invalid command: invalid phone number",
 			command: CmdCreateContact{
+				CreatedBy: *domain.NewUser(uuid.New()),
+				FirstName: "John",
+				LastName:  "Doe",
+				Email:     "test@contact.local",
+				Phone:     "0612345678",
+			},
+			expectedError: ErrInvalidCommand,
+		},
+		{
+			name: "invalid command: invalid uuid",
+			command: CmdCreateContact{
+				CreatedBy: *domain.NewEmptyUser(),
 				FirstName: "John",
 				LastName:  "Doe",
 				Email:     "test@contact.local",
@@ -78,7 +93,7 @@ func testCreateContactValidation(t *testing.T) {
 
 			if tc.expectedError == nil {
 				container.contactRepo.EXPECT().
-					Save(ctx, gomock.Any()).
+					Create(ctx, gomock.Any()).
 					Times(1).
 					Return(nil, nil)
 			}
@@ -96,6 +111,7 @@ func testCreateContact(t *testing.T) {
 
 	t.Run("successful contact creation", func(t *testing.T) {
 		cmd := CmdCreateContact{
+			CreatedBy: *domain.NewUser(uuid.New()),
 			FirstName: "John",
 			LastName:  "Doe",
 			Email:     "jdoe@contact.local",
@@ -103,7 +119,7 @@ func testCreateContact(t *testing.T) {
 		}
 
 		container.contactRepo.EXPECT().
-			Save(ctx, gomock.Any()).
+			Create(ctx, gomock.Any()).
 			Times(1).
 			Return(
 				&domain.Contact{
@@ -125,6 +141,7 @@ func testCreateContact(t *testing.T) {
 
 	t.Run("repository unexpected error", func(t *testing.T) {
 		cmd := CmdCreateContact{
+			CreatedBy: *domain.NewUser(uuid.New()),
 			FirstName: "John",
 			LastName:  "Doe",
 			Email:     "jdoe@contact.local",
@@ -132,7 +149,7 @@ func testCreateContact(t *testing.T) {
 		}
 
 		container.contactRepo.EXPECT().
-			Save(ctx, gomock.Any()).
+			Create(ctx, gomock.Any()).
 			Times(1).
 			Return(
 				nil,

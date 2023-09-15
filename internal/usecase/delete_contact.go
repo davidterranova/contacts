@@ -10,7 +10,8 @@ import (
 )
 
 type CmdDeleteContact struct {
-	ContactId string `validate:"required,uuid"`
+	Deleter   domain.User `validate:"required"`
+	ContactId string      `validate:"required,uuid"`
 }
 
 type DeleteContactHandler struct {
@@ -36,6 +37,12 @@ func (h DeleteContactHandler) Delete(ctx context.Context, cmd CmdDeleteContact) 
 		return fmt.Errorf("%w: %s", ErrInvalidCommand, err)
 	}
 
-	_, err = handleRepositoryError[*domain.Contact](nil, h.repo.Delete(ctx, contactUUID))
+	_, err = handleRepositoryError[*domain.Contact](nil, h.repo.Delete(ctx, contactUUID, func(c domain.Contact) error {
+		if c.CreatedBy != cmd.Deleter.Id {
+			return fmt.Errorf("%w: %s", ErrForbidden, "contact can only be deleted by its creator")
+		}
+
+		return nil
+	}))
 	return err
 }

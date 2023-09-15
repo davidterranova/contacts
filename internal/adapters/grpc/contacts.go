@@ -5,6 +5,8 @@ import (
 
 	"github.com/davidterranova/contacts/internal/domain"
 	"github.com/davidterranova/contacts/internal/usecase"
+	"github.com/davidterranova/contacts/pkg/auth"
+	"github.com/rs/zerolog/log"
 )
 
 const layout = "2006-01-02T15:04:05Z"
@@ -27,7 +29,15 @@ func NewHandler(app App) *Handler {
 }
 
 func (h *Handler) ListContacts(ctx context.Context, req *ListContactsRequest) (*ListContactsResponse, error) {
-	contacts, err := h.app.ListContacts(ctx, usecase.QueryListContact{})
+	user, err := auth.UserFromContext(ctx)
+	if err != nil {
+		log.Ctx(ctx).Warn().Err(err).Msg("user_contacts:list failed to get user from context")
+		return nil, err
+	}
+
+	contacts, err := h.app.ListContacts(ctx, usecase.QueryListContact{
+		CreatedBy: user,
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -38,9 +48,16 @@ func (h *Handler) ListContacts(ctx context.Context, req *ListContactsRequest) (*
 }
 
 func (h *Handler) CreateContact(ctx context.Context, req *CreateContactRequest) (*CreateContactResponse, error) {
+	user, err := auth.UserFromContext(ctx)
+	if err != nil {
+		log.Ctx(ctx).Warn().Err(err).Msg("user_contacts:create failed to get user from context")
+		return nil, err
+	}
+
 	contact, err := h.app.CreateContact(
 		ctx,
 		usecase.CmdCreateContact{
+			CreatedBy: user,
 			FirstName: req.FirstName,
 			LastName:  req.LastName,
 			Email:     req.Email,
@@ -57,9 +74,16 @@ func (h *Handler) CreateContact(ctx context.Context, req *CreateContactRequest) 
 }
 
 func (h *Handler) UpdateContact(ctx context.Context, req *UpdateContactRequest) (*UpdateContactResponse, error) {
+	user, err := auth.UserFromContext(ctx)
+	if err != nil {
+		log.Ctx(ctx).Warn().Err(err).Msg("user_contacts:update failed to get user from context")
+		return nil, err
+	}
+
 	contact, err := h.app.UpdateContact(
 		ctx,
 		usecase.CmdUpdateContact{
+			Updater:   user,
 			ContactId: req.Id,
 			FirstName: req.FirstName,
 			LastName:  req.LastName,
@@ -77,9 +101,16 @@ func (h *Handler) UpdateContact(ctx context.Context, req *UpdateContactRequest) 
 }
 
 func (h *Handler) DeleteContact(ctx context.Context, req *DeleteContactRequest) (*DeleteContactResponse, error) {
-	err := h.app.DeleteContact(
+	user, err := auth.UserFromContext(ctx)
+	if err != nil {
+		log.Ctx(ctx).Warn().Err(err).Msg("user_contacts:delete failed to get user from context")
+		return nil, err
+	}
+
+	err = h.app.DeleteContact(
 		ctx,
 		usecase.CmdDeleteContact{
+			Deleter:   user,
 			ContactId: req.Id,
 		},
 	)

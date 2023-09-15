@@ -17,6 +17,7 @@ func TestUpdateContac(t *testing.T) {
 
 	testUpdateContactValidation(t)
 	testUpdateContact(t)
+	testUpdateContactFn(t)
 }
 
 func testUpdateContactValidation(t *testing.T) {
@@ -32,6 +33,7 @@ func testUpdateContactValidation(t *testing.T) {
 		{
 			name: "valid command",
 			command: CmdUpdateContact{
+				Updater:   *domain.NewUser(uuid.New()),
 				ContactId: uuid.NewString(),
 				FirstName: "John",
 				LastName:  "Doe",
@@ -83,6 +85,7 @@ func testUpdateContact(t *testing.T) {
 	t.Run("successfully update contact", func(t *testing.T) {
 		uuid := uuid.New()
 		cmd := CmdUpdateContact{
+			Updater:   *domain.NewUser(uuid),
 			ContactId: uuid.String(),
 			FirstName: "John",
 		}
@@ -106,6 +109,7 @@ func testUpdateContact(t *testing.T) {
 
 	t.Run("contact not found", func(t *testing.T) {
 		cmd := CmdUpdateContact{
+			Updater:   *domain.NewUser(uuid.New()),
 			ContactId: uuid.NewString(),
 			FirstName: "John",
 		}
@@ -125,6 +129,7 @@ func testUpdateContact(t *testing.T) {
 
 	t.Run("unexpected repository error", func(t *testing.T) {
 		cmd := CmdUpdateContact{
+			Updater:   *domain.NewUser(uuid.New()),
 			ContactId: uuid.NewString(),
 			FirstName: "John",
 		}
@@ -141,4 +146,51 @@ func testUpdateContact(t *testing.T) {
 		assert.ErrorIs(t, err, ErrInternal)
 		assert.Nil(t, updatedContact)
 	})
+}
+
+func testUpdateContactFn(t *testing.T) {
+	contact := domain.Contact{
+		Id:        uuid.New(),
+		CreatedBy: uuid.New(),
+		FirstName: "John",
+		LastName:  "Doe",
+		Email:     "jdoe@contact.local",
+		Phone:     "+33612345678",
+	}
+
+	tests := []struct {
+		name          string
+		contact       domain.Contact
+		cmd           CmdUpdateContact
+		expectedError error
+	}{
+		{
+			name:    "successfully update contact",
+			contact: contact,
+			cmd: CmdUpdateContact{
+				Updater:   *domain.NewUser(contact.CreatedBy),
+				FirstName: "Jane",
+			},
+			expectedError: nil,
+		},
+		{
+			name:    "unauthorized updater",
+			contact: contact,
+			cmd: CmdUpdateContact{
+				Updater:   *domain.NewUser(uuid.New()),
+				FirstName: "Jane",
+			},
+			expectedError: ErrForbidden,
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			_, err := updateContactFn(test.contact, test.cmd)
+			assert.ErrorIs(t, err, test.expectedError)
+		})
+	}
 }
