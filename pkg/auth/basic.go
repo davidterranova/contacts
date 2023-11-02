@@ -8,6 +8,18 @@ import (
 	"github.com/google/uuid"
 )
 
+func GrantAnyAccess() func(authToken string) (domain.User, error) {
+	return func(authToken string) (domain.User, error) {
+		reqUsername, _, ok := parseBasicAuth(authToken)
+		if !ok {
+			return *domain.NewEmptyUser(), ErrUnauthorized
+		}
+
+		id := uuid.NewSHA1(uuid.NameSpaceOID, []byte(reqUsername))
+		return *domain.NewUser(id), nil
+	}
+}
+
 func BasicAuth(username string, password string) func(authToken string) (domain.User, error) {
 	return func(authToken string) (domain.User, error) {
 		reqUsername, reqPassword, ok := parseBasicAuth(authToken)

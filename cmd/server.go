@@ -23,15 +23,11 @@ import (
 	"google.golang.org/grpc"
 )
 
-var (
-	serverCmd = &cobra.Command{
-		Use:   "server",
-		Short: "starts contacts server",
-		Run:   runServer,
-	}
-	basicAuthUsername = "admin"
-	basicAuthPassword = "admin"
-)
+var serverCmd = &cobra.Command{
+	Use:   "server",
+	Short: "starts contacts server",
+	Run:   runServer,
+}
 
 func runServer(cmd *cobra.Command, args []string) {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
@@ -55,7 +51,7 @@ func runServer(cmd *cobra.Command, args []string) {
 func httpAPIServer(ctx context.Context, app *internal.App) {
 	router := ihttp.New(
 		app,
-		xhttp.BasicAuthFn(basicAuthUsername, basicAuthPassword),
+		xhttp.GrantAnyFn(),
 	)
 	server := xhttp.NewServer(router, "", 8080)
 
@@ -77,7 +73,7 @@ func gqlAPIServer(ctx context.Context, app *internal.App) {
 	root.Handle(
 		"/query",
 		xhttp.AuthMiddleware(
-			xhttp.BasicAuthFn(basicAuthUsername, basicAuthPassword),
+			xhttp.GrantAnyFn(),
 		)(srv),
 	)
 	root.Handle("/", playground.Handler("GraphQL playground", "/query"))
@@ -97,7 +93,7 @@ func grpcServer(ctx context.Context, app *internal.App) {
 
 	var opts []grpc.ServerOption = []grpc.ServerOption{
 		grpc.UnaryInterceptor(
-			xgrpc.BasicAuthMiddleware(basicAuthUsername, basicAuthPassword),
+			xgrpc.GrantAnyFn(),
 		),
 	}
 	grpcServer := grpc.NewServer(opts...)
