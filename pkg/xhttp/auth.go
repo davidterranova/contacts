@@ -1,6 +1,7 @@
 package xhttp
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/davidterranova/contacts/internal/domain"
@@ -30,7 +31,18 @@ func BasicAuthFn(username string, password string) AuthFn {
 	return func(r *http.Request) (*domain.User, error) {
 		user, err := auth.BasicAuth(username, password)(r.Header.Get("Authorization"))
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("%w: %s", auth.ErrUnauthorized, err.Error())
+		}
+
+		return &user, nil
+	}
+}
+
+func GrantAnyFn() AuthFn {
+	return func(r *http.Request) (*domain.User, error) {
+		user, err := auth.GrantAnyAccess()(r.Header.Get("Authorization"))
+		if err != nil {
+			return nil, fmt.Errorf("%w: %s", auth.ErrUnauthorized, err.Error())
 		}
 
 		return &user, nil
