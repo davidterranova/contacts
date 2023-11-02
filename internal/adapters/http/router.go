@@ -22,9 +22,6 @@ func New(app App, authFn xhttp.AuthFn) *mux.Router {
 func mountV1Contacts(root *mux.Router, authFn xhttp.AuthFn, app App) {
 	contactsHandler := NewContactHandler(app)
 	v1 := root.PathPrefix("/v1/contacts").Subrouter()
-	v1.Use(
-		mux.CORSMethodMiddleware(v1),
-	)
 
 	if authFn != nil {
 		v1.Use(xhttp.AuthMiddleware(authFn))
@@ -42,6 +39,12 @@ func mountPublic(root *mux.Router) {
 		http.StripPrefix(
 			"/openapi/",
 			http.FileServer(http.Dir("docs/openapi")),
+		),
+	)
+	root.PathPrefix("/").Handler(
+		http.StripPrefix(
+			"/",
+			http.FileServer(http.Dir("web")),
 		),
 	)
 }

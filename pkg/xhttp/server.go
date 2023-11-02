@@ -42,7 +42,7 @@ func (s Server) Address() string {
 func (s Server) Serve(ctx context.Context) error {
 	srv := http.Server{
 		Addr:              s.Address(),
-		Handler:           s.handler,
+		Handler:           CORS()(s.handler),
 		WriteTimeout:      DefaultWriteTimeout,
 		ReadTimeout:       DefaultReadTimeout,
 		ReadHeaderTimeout: DefaultReadTimeout,
