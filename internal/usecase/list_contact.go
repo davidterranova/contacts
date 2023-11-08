@@ -4,9 +4,12 @@ import (
 	"context"
 
 	"github.com/davidterranova/contacts/internal/domain"
+	"github.com/davidterranova/contacts/pkg/user"
 )
 
-type QueryListContact struct{}
+type QueryListContact struct {
+	User user.User
+}
 
 type ListContactHandler struct {
 	lister ContactLister
@@ -19,5 +22,5 @@ func NewListContact(lister ContactLister) ListContactHandler {
 }
 
 func (h ListContactHandler) List(ctx context.Context, query QueryListContact) ([]*domain.Contact, error) {
-	return h.lister.List(ctx)
+	return h.lister.List(ctx, query)
 }

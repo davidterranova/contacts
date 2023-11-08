@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"github.com/davidterranova/contacts/internal/domain"
+	"github.com/davidterranova/contacts/internal/usecase"
 	"github.com/davidterranova/contacts/pkg/eventsourcing"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
@@ -65,10 +66,12 @@ func (l *InMemoryContactList) HandleEvent(e eventsourcing.Event[*domain.Contact]
 	l.contacts[e.AggregateId()] = c
 }
 
-func (l *InMemoryContactList) List(_ context.Context) ([]*domain.Contact, error) {
+func (l *InMemoryContactList) List(_ context.Context, query usecase.QueryListContact) ([]*domain.Contact, error) {
 	contacts := make([]*domain.Contact, 0, len(l.contacts))
 	for _, contact := range l.contacts {
-		contacts = append(contacts, contact)
+		if contact.CreatedBy.Id() == query.User.Id() {
+			contacts = append(contacts, contact)
+		}
 	}
 
 	return contacts, nil

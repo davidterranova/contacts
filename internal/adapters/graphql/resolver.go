@@ -6,6 +6,7 @@ import (
 	"github.com/davidterranova/contacts/internal/adapters/graphql/model"
 	"github.com/davidterranova/contacts/internal/domain"
 	"github.com/davidterranova/contacts/internal/usecase"
+	"github.com/davidterranova/contacts/pkg/user"
 )
 
 // This file will not be regenerated automatically.
@@ -14,9 +15,9 @@ import (
 
 type App interface {
 	ListContacts(ctx context.Context, query usecase.QueryListContact) ([]*domain.Contact, error)
-	CreateContact(ctx context.Context, cmd usecase.CmdCreateContact) (*domain.Contact, error)
-	UpdateContact(ctx context.Context, cmd usecase.CmdUpdateContact) (*domain.Contact, error)
-	DeleteContact(ctx context.Context, cmd usecase.CmdDeleteContact) error
+	CreateContact(ctx context.Context, cmd usecase.CmdCreateContact, cmdIssuedBy user.User) (*domain.Contact, error)
+	UpdateContact(ctx context.Context, cmd usecase.CmdUpdateContact, cmdIssuedBy user.User) (*domain.Contact, error)
+	DeleteContact(ctx context.Context, cmd usecase.CmdDeleteContact, cmdIssuedBy user.User) error
 }
 
 type Resolver struct {
@@ -39,12 +40,16 @@ func (r *Resolver) ListContacts(ctx context.Context) ([]*model.Contact, error) {
 }
 
 func (r *Resolver) CreateContact(ctx context.Context, input model.NewContact) (*model.Contact, error) {
-	contact, err := r.app.CreateContact(ctx, usecase.CmdCreateContact{
-		FirstName: input.FirstName,
-		LastName:  input.LastName,
-		Email:     input.Email,
-		Phone:     input.Phone,
-	})
+	contact, err := r.app.CreateContact(
+		ctx,
+		usecase.CmdCreateContact{
+			FirstName: input.FirstName,
+			LastName:  input.LastName,
+			Email:     input.Email,
+			Phone:     input.Phone,
+		},
+		user.NewUnauthenticated(), // TODO: to fix
+	)
 	if err != nil {
 		return nil, err
 	}

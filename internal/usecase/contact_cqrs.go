@@ -6,7 +6,7 @@ import (
 
 	"github.com/davidterranova/contacts/internal/domain"
 	"github.com/davidterranova/contacts/pkg/eventsourcing"
-	_ "github.com/golang/mock/mockgen/model"
+	_ "go.uber.org/mock/mockgen/model"
 )
 
 type ContactCmdHandler interface {
@@ -14,5 +14,5 @@ type ContactCmdHandler interface {
 }
 
 type ContactLister interface {
-	List(ctx context.Context) ([]*domain.Contact, error)
+	List(ctx context.Context, query QueryListContact) ([]*domain.Contact, error)
 }

@@ -9,18 +9,27 @@ import (
 
 	"github.com/davidterranova/contacts/internal/adapters/graphql/model"
 	"github.com/davidterranova/contacts/internal/usecase"
+	"github.com/davidterranova/contacts/pkg/auth"
+	"github.com/rs/zerolog/log"
 )
 
 // CreateContact is the resolver for the createContact field.
-func (r *mutationResolver) CreateContact(ctx context.Context, req model.NewContact) (*model.Contact, error) {
+func (r *mutationResolver) CreateContact(ctx context.Context, input model.NewContact) (*model.Contact, error) {
+	user, err := auth.UserFromContext(ctx)
+	if err != nil {
+		log.Ctx(ctx).Warn().Err(err).Msg("user_contacts:create failed to get user from context")
+		return nil, auth.ErrUnauthorized
+	}
+
 	contact, err := r.app.CreateContact(
 		ctx,
 		usecase.CmdCreateContact{
-			FirstName: req.FirstName,
-			LastName:  req.LastName,
-			Email:     req.Email,
-			Phone:     req.Phone,
+			FirstName: input.FirstName,
+			LastName:  input.LastName,
+			Email:     input.Email,
+			Phone:     input.Phone,
 		},
+		user,
 	)
 	if err != nil {
 		return nil, err
@@ -30,16 +39,23 @@ func (r *mutationResolver) CreateContact(ctx context.Context, req model.NewConta
 }
 
 // UpdateContact is the resolver for the updateContact field.
-func (r *mutationResolver) UpdateContact(ctx context.Context, id string, req model.NewContact) (*model.Contact, error) {
+func (r *mutationResolver) UpdateContact(ctx context.Context, id string, input model.NewContact) (*model.Contact, error) {
+	user, err := auth.UserFromContext(ctx)
+	if err != nil {
+		log.Ctx(ctx).Warn().Err(err).Msg("user_contacts:update failed to get user from context")
+		return nil, auth.ErrUnauthorized
+	}
+
 	contact, err := r.app.UpdateContact(
 		ctx,
 		usecase.CmdUpdateContact{
 			ContactId: id,
-			FirstName: req.FirstName,
-			LastName:  req.LastName,
-			Email:     req.Email,
-			Phone:     req.Phone,
+			FirstName: input.FirstName,
+			LastName:  input.LastName,
+			Email:     input.Email,
+			Phone:     input.Phone,
 		},
+		user,
 	)
 	if err != nil {
 		return nil, err
@@ -50,7 +66,13 @@ func (r *mutationResolver) UpdateContact(ctx context.Context, id string, req mod
 
 // DeleteContact is the resolver for the deleteContact field.
 func (r *mutationResolver) DeleteContact(ctx context.Context, id string) (*model.Contact, error) {
-	err := r.app.DeleteContact(ctx, usecase.CmdDeleteContact{ContactId: id})
+	user, err := auth.UserFromContext(ctx)
+	if err != nil {
+		log.Ctx(ctx).Warn().Err(err).Msg("user_contacts:delete failed to get user from context")
+		return nil, auth.ErrUnauthorized
+	}
+
+	err = r.app.DeleteContact(ctx, usecase.CmdDeleteContact{ContactId: id}, user)
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +82,15 @@ func (r *mutationResolver) DeleteContact(ctx context.Context, id string) (*model
 
 // ListContacts is the resolver for the listContacts field.
 func (r *queryResolver) ListContacts(ctx context.Context) ([]*model.Contact, error) {
-	contacts, err := r.app.ListContacts(ctx, usecase.QueryListContact{})
+	user, err := auth.UserFromContext(ctx)
+	if err != nil {
+		log.Ctx(ctx).Warn().Err(err).Msg("user_contacts:list failed to get user from context")
+		return nil, auth.ErrUnauthorized
+	}
+
+	contacts, err := r.app.ListContacts(ctx, usecase.QueryListContact{
+		User: user,
+	})
 	if err != nil {
 		return nil, err
 	}

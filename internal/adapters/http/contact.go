@@ -9,6 +9,8 @@ import (
 
 	"github.com/davidterranova/contacts/internal/domain"
 	"github.com/davidterranova/contacts/internal/usecase"
+	"github.com/davidterranova/contacts/pkg/auth"
+	"github.com/davidterranova/contacts/pkg/user"
 	"github.com/davidterranova/contacts/pkg/xhttp"
 	"github.com/gorilla/mux"
 	"github.com/rs/zerolog/log"
@@ -16,9 +18,9 @@ import (
 
 type App interface {
 	ListContacts(ctx context.Context, query usecase.QueryListContact) ([]*domain.Contact, error)
-	CreateContact(ctx context.Context, cmd usecase.CmdCreateContact) (*domain.Contact, error)
-	UpdateContact(ctx context.Context, cmd usecase.CmdUpdateContact) (*domain.Contact, error)
-	DeleteContact(ctx context.Context, cmd usecase.CmdDeleteContact) error
+	CreateContact(ctx context.Context, cmd usecase.CmdCreateContact, cmdIssuedBy user.User) (*domain.Contact, error)
+	UpdateContact(ctx context.Context, cmd usecase.CmdUpdateContact, cmdIssuedBy user.User) (*domain.Contact, error)
+	DeleteContact(ctx context.Context, cmd usecase.CmdDeleteContact, cmdIssuedBy user.User) error
 }
 
 type ContactHandler struct {
@@ -33,8 +35,16 @@ func NewContactHandler(app App) *ContactHandler {
 
 func (h *ContactHandler) List(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+	user, err := auth.UserFromContext(ctx)
+	if err != nil {
+		log.Ctx(ctx).Warn().Err(err).Msg("user_contacts:list failed to get user from context")
+		xhttp.WriteError(ctx, w, http.StatusInternalServerError, "failed to get user from context", err)
+		return
+	}
 
-	contacts, err := h.app.ListContacts(ctx, usecase.QueryListContact{})
+	contacts, err := h.app.ListContacts(ctx, usecase.QueryListContact{
+		User: user,
+	})
 	if err != nil {
 		log.Ctx(ctx).Warn().Err(err).Msg("user_contacts:list failed to list contacts")
 		xhttp.WriteError(ctx, w, http.StatusInternalServerError, "failed to list contacts", err)
@@ -55,8 +65,14 @@ type createContactRequest struct {
 func (h *ContactHandler) Create(w http.ResponseWriter, r *http.Request) {
 	var req createContactRequest
 	ctx := r.Context()
+	user, err := auth.UserFromContext(ctx)
+	if err != nil {
+		log.Ctx(ctx).Warn().Err(err).Msg("user_contacts:create failed to get user from context")
+		xhttp.WriteError(ctx, w, http.StatusInternalServerError, "failed to get user from context", err)
+		return
+	}
 
-	err := json.NewDecoder(r.Body).Decode(&req)
+	err = json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
 		log.Ctx(ctx).Warn().Err(err).Msg("user_contacts:create failed to decode request")
 		xhttp.WriteError(ctx, w, http.StatusBadRequest, "failed to decode request", err)
@@ -71,14 +87,15 @@ func (h *ContactHandler) Create(w http.ResponseWriter, r *http.Request) {
 			Email:     req.Email,
 			Phone:     req.Phone,
 		},
+		user,
 	)
 	if err != nil {
 		switch {
 		case errors.Is(err, usecase.ErrInvalidCommand):
 			xhttp.WriteError(ctx, w, http.StatusBadRequest, "contact validation failed", err)
 		default:
-			log.Ctx(ctx).Warn().Err(err).Msg("user_contacts:update failed to update contact")
-			xhttp.WriteError(ctx, w, http.StatusInternalServerError, "failed to update contact", err)
+			log.Ctx(ctx).Warn().Err(err).Msg("user_contacts:create failed to create contact")
+			xhttp.WriteError(ctx, w, http.StatusInternalServerError, "failed to create contact", err)
 		}
 		return
 	}
@@ -97,9 +114,15 @@ type updateContactRequest struct {
 func (h *ContactHandler) Update(w http.ResponseWriter, r *http.Request) {
 	var req updateContactRequest
 	ctx := r.Context()
+	user, err := auth.UserFromContext(ctx)
+	if err != nil {
+		log.Ctx(ctx).Warn().Err(err).Msg("user_contacts:update failed to get user from context")
+		xhttp.WriteError(ctx, w, http.StatusInternalServerError, "failed to get user from context", err)
+		return
+	}
 	contactId := mux.Vars(r)[pathContactId]
 
-	err := json.NewDecoder(r.Body).Decode(&req)
+	err = json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
 		log.Ctx(ctx).Warn().Err(err).Msg("user_contacts:update failed to decode request")
 		xhttp.WriteError(ctx, w, http.StatusBadRequest, "failed to decode request", err)
@@ -115,6 +138,7 @@ func (h *ContactHandler) Update(w http.ResponseWriter, r *http.Request) {
 			Email:     req.Email,
 			Phone:     req.Phone,
 		},
+		user,
 	)
 	if err != nil {
 		switch {
@@ -135,9 +159,15 @@ func (h *ContactHandler) Update(w http.ResponseWriter, r *http.Request) {
 
 func (h *ContactHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+	user, err := auth.UserFromContext(ctx)
+	if err != nil {
+		log.Ctx(ctx).Warn().Err(err).Msg("user_contacts:delete failed to get user from context")
+		xhttp.WriteError(ctx, w, http.StatusInternalServerError, "failed to get user from context", err)
+		return
+	}
 	contactId := mux.Vars(r)[pathContactId]
 
-	err := h.app.DeleteContact(ctx, usecase.CmdDeleteContact{ContactId: contactId})
+	err = h.app.DeleteContact(ctx, usecase.CmdDeleteContact{ContactId: contactId}, user)
 	if err != nil {
 		switch {
 		case errors.Is(err, usecase.ErrInvalidCommand):
@@ -145,7 +175,7 @@ func (h *ContactHandler) Delete(w http.ResponseWriter, r *http.Request) {
 		case errors.Is(err, usecase.ErrNotFound):
 			xhttp.WriteError(ctx, w, http.StatusNotFound, "contact not found", err)
 		default:
-			log.Ctx(ctx).Warn().Err(err).Msg("user_contacts:update failed to update contact")
+			log.Ctx(ctx).Warn().Err(err).Msg("user_contacts:delete failed to update contact")
 			xhttp.WriteError(ctx, w, http.StatusInternalServerError, "failed to update contact", err)
 		}
 		return

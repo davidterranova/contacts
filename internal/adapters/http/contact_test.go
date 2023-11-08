@@ -7,11 +7,12 @@ import (
 
 	"github.com/davidterranova/contacts/internal/domain"
 	"github.com/davidterranova/contacts/internal/usecase"
-	gomock "github.com/golang/mock/gomock"
+	"github.com/davidterranova/contacts/pkg/xhttp"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/steinfletcher/apitest"
 	jsonpath "github.com/steinfletcher/apitest-jsonpath"
+	"go.uber.org/mock/gomock"
 )
 
 type container struct {
@@ -87,7 +88,7 @@ func TestCreate(t *testing.T) {
 
 			container := testContainer(t)
 			container.app.EXPECT().
-				CreateContact(gomock.Any(), gomock.Any()).
+				CreateContact(gomock.Any(), gomock.Any(), gomock.Any()).
 				Times(1).
 				Return(c.returnedAppContact, c.returnedAppErr)
 
@@ -151,7 +152,7 @@ func TestUpdateContact(t *testing.T) {
 
 			container := testContainer(t)
 			container.app.EXPECT().
-				UpdateContact(gomock.Any(), gomock.Any()).
+				UpdateContact(gomock.Any(), gomock.Any(), gomock.Any()).
 				Times(1).
 				Return(c.returnedAppContact, c.returnedAppErr)
 
@@ -199,7 +200,7 @@ func TestDeleteContact(t *testing.T) {
 
 			container := testContainer(t)
 			container.app.EXPECT().
-				DeleteContact(gomock.Any(), gomock.Any()).
+				DeleteContact(gomock.Any(), gomock.Any(), gomock.Any()).
 				Times(1).
 				Return(c.returnedAppErr)
 
@@ -222,6 +223,6 @@ func testContainer(t *testing.T) *container {
 
 	return &container{
 		app:     app,
-		handler: New(app),
+		handler: New(app, xhttp.GrantAnyFn()),
 	}
 }

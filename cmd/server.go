@@ -61,7 +61,10 @@ func runServer(cmd *cobra.Command, args []string) {
 }
 
 func httpAPIServer(ctx context.Context, app *internal.App) {
-	router := ihttp.New(app)
+	router := ihttp.New(
+		app,
+		xhttp.GrantAnyFn(),
+	)
 	server := xhttp.NewServer(router, "", 8080)
 
 	err := server.Serve(ctx)
