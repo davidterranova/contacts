@@ -96,7 +96,7 @@ func (c cmdUpdateContact) Apply(aggregate *domain.Contact) ([]eventsourcing.Even
 }
 
 func checkUpdatePolicy(cmd cmdUpdateContact, aggregate *domain.Contact) error {
-	if cmd.IssuedBy() == aggregate.CreatedBy {
+	if cmd.IssuedBy().Id() == aggregate.CreatedBy.Id() {
 		return nil
 	}
 

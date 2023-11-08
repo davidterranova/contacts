@@ -86,7 +86,7 @@ func (c cmdDeleteContact) Apply(aggregate *domain.Contact) ([]eventsourcing.Even
 }
 
 func checkDeletePolicy(cmd cmdDeleteContact, aggregate *domain.Contact) error {
-	if cmd.IssuedBy() == aggregate.CreatedBy {
+	if cmd.IssuedBy().Id() == aggregate.CreatedBy.Id() {
 		return nil
 	}
 
