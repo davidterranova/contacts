@@ -7,6 +7,7 @@ import (
 
 	"github.com/davidterranova/contacts/internal/domain"
 	"github.com/davidterranova/contacts/internal/ports"
+	"github.com/davidterranova/contacts/pkg/user"
 	"github.com/golang/mock/gomock"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
@@ -33,7 +34,7 @@ func testUpdateContactValidation(t *testing.T) {
 		{
 			name: "valid command",
 			command: CmdUpdateContact{
-				Updater:   *domain.NewUser(uuid.New()),
+				Updater:   user.New(uuid.New(), user.UserTypeAuthenticated),
 				ContactId: uuid.NewString(),
 				FirstName: "John",
 				LastName:  "Doe",
@@ -85,7 +86,7 @@ func testUpdateContact(t *testing.T) {
 	t.Run("successfully update contact", func(t *testing.T) {
 		uuid := uuid.New()
 		cmd := CmdUpdateContact{
-			Updater:   *domain.NewUser(uuid),
+			Updater:   user.New(uuid, user.UserTypeAuthenticated),
 			ContactId: uuid.String(),
 			FirstName: "John",
 		}
@@ -109,7 +110,7 @@ func testUpdateContact(t *testing.T) {
 
 	t.Run("contact not found", func(t *testing.T) {
 		cmd := CmdUpdateContact{
-			Updater:   *domain.NewUser(uuid.New()),
+			Updater:   user.New(uuid.New(), user.UserTypeAuthenticated),
 			ContactId: uuid.NewString(),
 			FirstName: "John",
 		}
@@ -129,7 +130,7 @@ func testUpdateContact(t *testing.T) {
 
 	t.Run("unexpected repository error", func(t *testing.T) {
 		cmd := CmdUpdateContact{
-			Updater:   *domain.NewUser(uuid.New()),
+			Updater:   user.New(uuid.New(), user.UserTypeAuthenticated),
 			ContactId: uuid.NewString(),
 			FirstName: "John",
 		}
@@ -168,7 +169,7 @@ func testUpdateContactFn(t *testing.T) {
 			name:    "successfully update contact",
 			contact: contact,
 			cmd: CmdUpdateContact{
-				Updater:   *domain.NewUser(contact.CreatedBy),
+				Updater:   user.New(contact.CreatedBy, user.UserTypeAuthenticated),
 				FirstName: "Jane",
 			},
 			expectedError: nil,
@@ -177,7 +178,7 @@ func testUpdateContactFn(t *testing.T) {
 			name:    "unauthorized updater",
 			contact: contact,
 			cmd: CmdUpdateContact{
-				Updater:   *domain.NewUser(uuid.New()),
+				Updater:   user.New(uuid.New(), user.UserTypeAuthenticated),
 				FirstName: "Jane",
 			},
 			expectedError: ErrForbidden,

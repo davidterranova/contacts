@@ -9,6 +9,7 @@ import (
 	"github.com/davidterranova/contacts/internal/domain"
 	"github.com/davidterranova/contacts/internal/usecase"
 	"github.com/davidterranova/contacts/pkg/auth"
+	"github.com/davidterranova/contacts/pkg/user"
 	gomock "github.com/golang/mock/gomock"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
@@ -28,7 +29,7 @@ func TestList(t *testing.T) {
 		t.Parallel()
 
 		container := testContainer(t)
-		container.handler.Use(appendUserToContextMiddleware(*domain.NewUser(uuid.New())))
+		container.handler.Use(appendUserToContextMiddleware(user.New(uuid.New(), user.UserTypeAuthenticated)))
 		container.app.EXPECT().
 			ListContacts(gomock.Any(), gomock.Any()).
 			Return(
@@ -56,7 +57,7 @@ func TestCreate(t *testing.T) {
 	cases := []struct {
 		name               string
 		requestBodyContent json.RawMessage
-		authorizedUser     *domain.User
+		authorizedUser     user.User
 		returnedAppContact *domain.Contact
 		returnedAppErr     error
 		expectedStatus     int
@@ -64,7 +65,7 @@ func TestCreate(t *testing.T) {
 		{
 			name:               "Create contact",
 			requestBodyContent: json.RawMessage(`{"first_name": "John", "last_name": "Doe", "email": "jdoe@contact.local", "phone": "+15555555555"}`),
-			authorizedUser:     domain.NewUser(uuid.New()),
+			authorizedUser:     user.New(uuid.New(), user.UserTypeAuthenticated),
 			returnedAppContact: domain.New(uuid.New()),
 			returnedAppErr:     nil,
 			expectedStatus:     http.StatusCreated,
@@ -72,7 +73,7 @@ func TestCreate(t *testing.T) {
 		{
 			name:               "bad request",
 			requestBodyContent: json.RawMessage(`{"first_name": "John", "last_name": "Doe", "email": "invalid email", "phone": "+15555555555"}`),
-			authorizedUser:     domain.NewUser(uuid.New()),
+			authorizedUser:     user.New(uuid.New(), user.UserTypeAuthenticated),
 			returnedAppContact: nil,
 			returnedAppErr:     usecase.ErrInvalidCommand,
 			expectedStatus:     http.StatusBadRequest,
@@ -80,7 +81,7 @@ func TestCreate(t *testing.T) {
 		{
 			name:               "internal server error",
 			requestBodyContent: json.RawMessage(`{"first_name": "John", "last_name": "Doe", "email": "jdoe@contact.local", "phone": "+15555555555"}`),
-			authorizedUser:     domain.NewUser(uuid.New()),
+			authorizedUser:     user.New(uuid.New(), user.UserTypeAuthenticated),
 			returnedAppContact: nil,
 			returnedAppErr:     usecase.ErrInternal,
 			expectedStatus:     http.StatusInternalServerError,
@@ -94,7 +95,7 @@ func TestCreate(t *testing.T) {
 
 			container := testContainer(t)
 			if c.authorizedUser != nil {
-				container.handler.Use(appendUserToContextMiddleware(*c.authorizedUser))
+				container.handler.Use(appendUserToContextMiddleware(c.authorizedUser))
 			}
 			container.app.EXPECT().
 				CreateContact(gomock.Any(), gomock.Any()).
@@ -120,7 +121,7 @@ func TestUpdateContact(t *testing.T) {
 		name               string
 		requestContactId   string
 		requestBodyContent json.RawMessage
-		authorizedUser     *domain.User
+		authorizedUser     user.User
 		returnedAppContact *domain.Contact
 		returnedAppErr     error
 		expectedStatus     int
@@ -128,7 +129,7 @@ func TestUpdateContact(t *testing.T) {
 		{
 			name:               "partial",
 			requestBodyContent: json.RawMessage(`{"first_name": "John"}`),
-			authorizedUser:     domain.NewUser(uuid.New()),
+			authorizedUser:     user.New(uuid.New(), user.UserTypeAuthenticated),
 			returnedAppContact: domain.New(uuid.New()),
 			returnedAppErr:     nil,
 			expectedStatus:     http.StatusOK,
@@ -136,7 +137,7 @@ func TestUpdateContact(t *testing.T) {
 		{
 			name:               "not found",
 			requestBodyContent: json.RawMessage(`{"first_name": "John"}`),
-			authorizedUser:     domain.NewUser(uuid.New()),
+			authorizedUser:     user.New(uuid.New(), user.UserTypeAuthenticated),
 			returnedAppContact: nil,
 			returnedAppErr:     usecase.ErrNotFound,
 			expectedStatus:     http.StatusNotFound,
@@ -144,7 +145,7 @@ func TestUpdateContact(t *testing.T) {
 		{
 			name:               "bad request",
 			requestBodyContent: json.RawMessage(`{"email": "invalid email"}`),
-			authorizedUser:     domain.NewUser(uuid.New()),
+			authorizedUser:     user.New(uuid.New(), user.UserTypeAuthenticated),
 			returnedAppContact: nil,
 			returnedAppErr:     usecase.ErrInvalidCommand,
 			expectedStatus:     http.StatusBadRequest,
@@ -152,7 +153,7 @@ func TestUpdateContact(t *testing.T) {
 		{
 			name:               "internal server error",
 			requestBodyContent: json.RawMessage(`{"first_name": "John"}`),
-			authorizedUser:     domain.NewUser(uuid.New()),
+			authorizedUser:     user.New(uuid.New(), user.UserTypeAuthenticated),
 			returnedAppContact: nil,
 			returnedAppErr:     usecase.ErrInternal,
 			expectedStatus:     http.StatusInternalServerError,
@@ -166,7 +167,7 @@ func TestUpdateContact(t *testing.T) {
 
 			container := testContainer(t)
 			if c.authorizedUser != nil {
-				container.handler.Use(appendUserToContextMiddleware(*c.authorizedUser))
+				container.handler.Use(appendUserToContextMiddleware(c.authorizedUser))
 			}
 			container.app.EXPECT().
 				UpdateContact(gomock.Any(), gomock.Any()).
@@ -190,25 +191,25 @@ func TestDeleteContact(t *testing.T) {
 
 	cases := []struct {
 		name           string
-		authorizedUser *domain.User
+		authorizedUser user.User
 		returnedAppErr error
 		expectedStatus int
 	}{
 		{
 			name:           "ok",
-			authorizedUser: domain.NewUser(uuid.New()),
+			authorizedUser: user.New(uuid.New(), user.UserTypeAuthenticated),
 			returnedAppErr: nil,
 			expectedStatus: http.StatusNoContent,
 		},
 		{
 			name:           "not found",
-			authorizedUser: domain.NewUser(uuid.New()),
+			authorizedUser: user.New(uuid.New(), user.UserTypeAuthenticated),
 			returnedAppErr: usecase.ErrNotFound,
 			expectedStatus: http.StatusNotFound,
 		},
 		{
 			name:           "internal server error",
-			authorizedUser: domain.NewUser(uuid.New()),
+			authorizedUser: user.New(uuid.New(), user.UserTypeAuthenticated),
 			returnedAppErr: usecase.ErrInternal,
 			expectedStatus: http.StatusInternalServerError,
 		},
@@ -221,7 +222,7 @@ func TestDeleteContact(t *testing.T) {
 
 			container := testContainer(t)
 			if c.authorizedUser != nil {
-				container.handler.Use(appendUserToContextMiddleware(*c.authorizedUser))
+				container.handler.Use(appendUserToContextMiddleware(c.authorizedUser))
 			}
 			container.app.EXPECT().
 				DeleteContact(gomock.Any(), gomock.Any()).
@@ -251,7 +252,7 @@ func testContainer(t *testing.T) *container {
 	}
 }
 
-func appendUserToContextMiddleware(u domain.User) func(handler http.Handler) http.Handler {
+func appendUserToContextMiddleware(u user.User) func(handler http.Handler) http.Handler {
 	return func(handler http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			handler.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), auth.RequestCtxUserKey, u)))

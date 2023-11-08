@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/davidterranova/contacts/internal/domain"
+	"github.com/davidterranova/contacts/pkg/user"
 )
 
 type RequestCtxKey string
@@ -16,15 +16,15 @@ var (
 	ErrUnauthorized = errors.New("unauthorized")
 )
 
-func UserFromContext(ctx context.Context) (domain.User, error) {
-	u, ok := ctx.Value(RequestCtxUserKey).(domain.User)
+func UserFromContext(ctx context.Context) (user.User, error) {
+	u, ok := ctx.Value(RequestCtxUserKey).(user.User)
 	if !ok {
-		return *domain.NewEmptyUser(), ErrUserNotFound
+		return user.NewUnauthenticated(), ErrUserNotFound
 	}
 
 	return u, nil
 }
 
-func ContextWithUser(ctx context.Context, u domain.User) context.Context {
+func ContextWithUser(ctx context.Context, u user.User) context.Context {
 	return context.WithValue(ctx, RequestCtxUserKey, u)
 }

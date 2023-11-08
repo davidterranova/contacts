@@ -4,35 +4,35 @@ import (
 	"encoding/base64"
 	"strings"
 
-	"github.com/davidterranova/contacts/internal/domain"
+	"github.com/davidterranova/contacts/pkg/user"
 	"github.com/google/uuid"
 )
 
-func GrantAnyAccess() func(authToken string) (domain.User, error) {
-	return func(authToken string) (domain.User, error) {
+func GrantAnyAccess() func(authToken string) (user.User, error) {
+	return func(authToken string) (user.User, error) {
 		reqUsername, _, ok := parseBasicAuth(authToken)
 		if !ok {
-			return *domain.NewEmptyUser(), ErrUnauthorized
+			return *user.NewUnauthenticated(), ErrUnauthorized
 		}
 
 		id := uuid.NewSHA1(uuid.NameSpaceOID, []byte(reqUsername))
-		return *domain.NewUser(id), nil
+		return user.New(id, user.UserTypeAuthenticated), nil
 	}
 }
 
-func BasicAuth(username string, password string) func(authToken string) (domain.User, error) {
-	return func(authToken string) (domain.User, error) {
+func BasicAuth(username string, password string) func(authToken string) (user.User, error) {
+	return func(authToken string) (user.User, error) {
 		reqUsername, reqPassword, ok := parseBasicAuth(authToken)
 		if !ok {
-			return *domain.NewEmptyUser(), ErrUnauthorized
+			return user.NewUnauthenticated(), ErrUnauthorized
 		}
 
 		if reqUsername != username || reqPassword != password {
-			return *domain.NewEmptyUser(), ErrUnauthorized
+			return user.NewUnauthenticated(), ErrUnauthorized
 		}
 
 		id := uuid.NewSHA1(uuid.NameSpaceOID, []byte(username))
-		return *domain.NewUser(id), nil
+		return user.New(id, user.UserTypeAuthenticated), nil
 	}
 }
 

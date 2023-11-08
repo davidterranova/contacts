@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/davidterranova/contacts/internal/domain"
 	"github.com/davidterranova/contacts/pkg/auth"
+	"github.com/davidterranova/contacts/pkg/user"
 )
 
-type AuthFn func(r *http.Request) (*domain.User, error)
+type AuthFn func(r *http.Request) (user.User, error)
 
 func AuthMiddleware(authFn AuthFn) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
@@ -21,30 +21,30 @@ func AuthMiddleware(authFn AuthFn) func(http.Handler) http.Handler {
 				return
 			}
 
-			reqWithCtx := r.WithContext(auth.ContextWithUser(ctx, *user))
+			reqWithCtx := r.WithContext(auth.ContextWithUser(ctx, user))
 			next.ServeHTTP(w, reqWithCtx)
 		})
 	}
 }
 
 func BasicAuthFn(username string, password string) AuthFn {
-	return func(r *http.Request) (*domain.User, error) {
+	return func(r *http.Request) (user.User, error) {
 		user, err := auth.BasicAuth(username, password)(r.Header.Get("Authorization"))
 		if err != nil {
 			return nil, fmt.Errorf("%w: %s", auth.ErrUnauthorized, err.Error())
 		}
 
-		return &user, nil
+		return user, nil
 	}
 }
 
 func GrantAnyFn() AuthFn {
-	return func(r *http.Request) (*domain.User, error) {
+	return func(r *http.Request) (user.User, error) {
 		user, err := auth.GrantAnyAccess()(r.Header.Get("Authorization"))
 		if err != nil {
 			return nil, fmt.Errorf("%w: %s", auth.ErrUnauthorized, err.Error())
 		}
 
-		return &user, nil
+		return user, nil
 	}
 }

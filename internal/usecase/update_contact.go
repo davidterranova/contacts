@@ -5,18 +5,20 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/davidterranova/contacts/pkg/user"
+
 	"github.com/davidterranova/contacts/internal/domain"
 	"github.com/go-playground/validator"
 	uuid "github.com/google/uuid"
 )
 
 type CmdUpdateContact struct {
-	Updater   domain.User `validate:"required"`
-	ContactId string      `validate:"required,uuid"`
-	FirstName string      `validate:"omitempty,min=2,max=255"`
-	LastName  string      `validate:"omitempty,min=2,max=255"`
-	Email     string      `validate:"omitempty,email"`
-	Phone     string      `validate:"omitempty,e164"` // https://en.wikipedia.org/wiki/E.164
+	Updater   user.User `validate:"required"`
+	ContactId string    `validate:"required,uuid"`
+	FirstName string    `validate:"omitempty,min=2,max=255"`
+	LastName  string    `validate:"omitempty,min=2,max=255"`
+	Email     string    `validate:"omitempty,email"`
+	Phone     string    `validate:"omitempty,e164"` // https://en.wikipedia.org/wiki/E.164
 }
 
 type UpdateContact struct {
@@ -52,7 +54,7 @@ func (h UpdateContact) Update(ctx context.Context, cmd CmdUpdateContact) (*domai
 func updateContactFn(c domain.Contact, cmd CmdUpdateContact) (domain.Contact, error) {
 	updated := false
 
-	if c.CreatedBy != cmd.Updater.Id {
+	if c.CreatedBy != cmd.Updater.Id() {
 		return c, fmt.Errorf("%w: %s", ErrForbidden, "contact can only be updated by its creator")
 	}
 

@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/davidterranova/contacts/internal/domain"
+	"github.com/davidterranova/contacts/pkg/user"
 	"github.com/golang/mock/gomock"
 	uuid "github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
@@ -44,7 +45,7 @@ func testCreateContactValidation(t *testing.T) {
 		{
 			name: "valid command",
 			command: CmdCreateContact{
-				CreatedBy: *domain.NewUser(uuid.New()),
+				CreatedBy: user.New(uuid.New(), user.UserTypeAuthenticated),
 				FirstName: "John",
 				LastName:  "Doe",
 				Email:     "test@contact.local",
@@ -55,7 +56,7 @@ func testCreateContactValidation(t *testing.T) {
 		{
 			name: "invalid command: missing email address",
 			command: CmdCreateContact{
-				CreatedBy: *domain.NewUser(uuid.New()),
+				CreatedBy: user.New(uuid.New(), user.UserTypeAuthenticated),
 				FirstName: "John",
 				LastName:  "Doe",
 				Phone:     "+33612345678",
@@ -65,7 +66,7 @@ func testCreateContactValidation(t *testing.T) {
 		{
 			name: "invalid command: invalid phone number",
 			command: CmdCreateContact{
-				CreatedBy: *domain.NewUser(uuid.New()),
+				CreatedBy: user.New(uuid.New(), user.UserTypeAuthenticated),
 				FirstName: "John",
 				LastName:  "Doe",
 				Email:     "test@contact.local",
@@ -76,7 +77,7 @@ func testCreateContactValidation(t *testing.T) {
 		{
 			name: "invalid command: invalid uuid",
 			command: CmdCreateContact{
-				CreatedBy: *domain.NewEmptyUser(),
+				CreatedBy: user.NewUnauthenticated(),
 				FirstName: "John",
 				LastName:  "Doe",
 				Email:     "test@contact.local",
@@ -111,7 +112,7 @@ func testCreateContact(t *testing.T) {
 
 	t.Run("successful contact creation", func(t *testing.T) {
 		cmd := CmdCreateContact{
-			CreatedBy: *domain.NewUser(uuid.New()),
+			CreatedBy: user.New(uuid.New(), user.UserTypeAuthenticated),
 			FirstName: "John",
 			LastName:  "Doe",
 			Email:     "jdoe@contact.local",
@@ -141,7 +142,7 @@ func testCreateContact(t *testing.T) {
 
 	t.Run("repository unexpected error", func(t *testing.T) {
 		cmd := CmdCreateContact{
-			CreatedBy: *domain.NewUser(uuid.New()),
+			CreatedBy: user.New(uuid.New(), user.UserTypeAuthenticated),
 			FirstName: "John",
 			LastName:  "Doe",
 			Email:     "jdoe@contact.local",
