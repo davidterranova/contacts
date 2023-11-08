@@ -6,6 +6,7 @@ import (
 
 	"github.com/davidterranova/contacts/internal/domain"
 	"github.com/davidterranova/contacts/pkg/eventsourcing"
+	"github.com/davidterranova/contacts/pkg/user"
 	"github.com/go-playground/validator"
 	uuid "github.com/google/uuid"
 )
@@ -29,13 +30,13 @@ func NewCreateContact(commandHandler eventsourcing.CommandHandler[*domain.Contac
 	}
 }
 
-func (h CreateContact) Create(ctx context.Context, cmd CmdCreateContact) (*domain.Contact, error) {
+func (h CreateContact) Create(ctx context.Context, cmd CmdCreateContact, cmdIssuedBy user.User) (*domain.Contact, error) {
 	err := h.validator.Struct(cmd)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %s", ErrInvalidCommand, err)
 	}
 
-	checkedCmd := newCmdCreateContact(cmd)
+	checkedCmd := newCmdCreateContact(cmd, cmdIssuedBy)
 	return handleErrs(h.commandHandler.Handle(checkedCmd))
 }
 
@@ -44,11 +45,12 @@ type cmdCreateContact struct {
 	CmdCreateContact
 }
 
-func newCmdCreateContact(data CmdCreateContact) cmdCreateContact {
+func newCmdCreateContact(data CmdCreateContact, cmdIssuedBy user.User) cmdCreateContact {
 	return cmdCreateContact{
 		BaseCommand: eventsourcing.NewBaseCommand[*domain.Contact](
 			uuid.New(),
 			domain.AggregateContact,
+			cmdIssuedBy,
 		),
 		CmdCreateContact: data,
 	}
@@ -60,9 +62,9 @@ func (c cmdCreateContact) Apply(aggregate *domain.Contact) ([]eventsourcing.Even
 	}
 
 	return []eventsourcing.Event[*domain.Contact]{
-		domain.NewEvtContactCreated(c.AggregateId()),
-		domain.NewEvtContactEmailUpdated(c.AggregateId(), c.Email),
-		domain.NewEvtContactNameUpdated(c.AggregateId(), c.FirstName, c.LastName),
-		domain.NewEvtContactPhoneUpdated(c.AggregateId(), c.Phone),
+		domain.NewEvtContactCreated(c.AggregateId(), c.IssuedBy()),
+		domain.NewEvtContactEmailUpdated(c.AggregateId(), c.IssuedBy(), c.Email),
+		domain.NewEvtContactNameUpdated(c.AggregateId(), c.IssuedBy(), c.FirstName, c.LastName),
+		domain.NewEvtContactPhoneUpdated(c.AggregateId(), c.IssuedBy(), c.Phone),
 	}, nil
 }

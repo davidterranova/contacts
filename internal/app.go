@@ -6,6 +6,7 @@ import (
 	"github.com/davidterranova/contacts/internal/domain"
 	"github.com/davidterranova/contacts/internal/usecase"
 	"github.com/davidterranova/contacts/pkg/eventsourcing"
+	"github.com/davidterranova/contacts/pkg/user"
 )
 
 type ContactWriteModel interface {
@@ -21,15 +22,15 @@ type ListContact interface {
 }
 
 type CreateContact interface {
-	Create(ctx context.Context, cmd usecase.CmdCreateContact) (*domain.Contact, error)
+	Create(ctx context.Context, cmd usecase.CmdCreateContact, cmdIssuedBy user.User) (*domain.Contact, error)
 }
 
 type UpdateContact interface {
-	Update(ctx context.Context, cmd usecase.CmdUpdateContact) (*domain.Contact, error)
+	Update(ctx context.Context, cmd usecase.CmdUpdateContact, cmdIssuedBy user.User) (*domain.Contact, error)
 }
 
 type DeleteContact interface {
-	Delete(ctx context.Context, cmd usecase.CmdDeleteContact) error
+	Delete(ctx context.Context, cmd usecase.CmdDeleteContact, cmdIssuedBy user.User) error
 }
 
 type App struct {
@@ -52,14 +53,14 @@ func (a *App) ListContacts(ctx context.Context, query usecase.QueryListContact) 
 	return a.listContact.List(ctx, query)
 }
 
-func (a *App) CreateContact(ctx context.Context, cmd usecase.CmdCreateContact) (*domain.Contact, error) {
-	return a.createContact.Create(ctx, cmd)
+func (a *App) CreateContact(ctx context.Context, cmd usecase.CmdCreateContact, cmdIssuedBy user.User) (*domain.Contact, error) {
+	return a.createContact.Create(ctx, cmd, cmdIssuedBy)
 }
 
-func (a *App) UpdateContact(ctx context.Context, cmd usecase.CmdUpdateContact) (*domain.Contact, error) {
-	return a.updateContact.Update(ctx, cmd)
+func (a *App) UpdateContact(ctx context.Context, cmd usecase.CmdUpdateContact, cmdIssuedBy user.User) (*domain.Contact, error) {
+	return a.updateContact.Update(ctx, cmd, cmdIssuedBy)
 }
 
-func (a *App) DeleteContact(ctx context.Context, cmd usecase.CmdDeleteContact) error {
-	return a.deleteContact.Delete(ctx, cmd)
+func (a *App) DeleteContact(ctx context.Context, cmd usecase.CmdDeleteContact, cmdIssuedBy user.User) error {
+	return a.deleteContact.Delete(ctx, cmd, cmdIssuedBy)
 }

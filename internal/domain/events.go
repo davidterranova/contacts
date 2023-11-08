@@ -1,6 +1,8 @@
 package domain
 
 import (
+	"github.com/davidterranova/contacts/pkg/user"
+
 	"github.com/davidterranova/contacts/pkg/eventsourcing"
 	"github.com/google/uuid"
 )
@@ -9,9 +11,9 @@ type EvtContactCreated struct {
 	eventsourcing.EventBase[*Contact]
 }
 
-func NewEvtContactCreated(aggregateId uuid.UUID) EvtContactCreated {
+func NewEvtContactCreated(aggregateId uuid.UUID, createdBy user.User) EvtContactCreated {
 	return EvtContactCreated{
-		EventBase: eventsourcing.NewEventBase[*Contact](AggregateContact, aggregateId),
+		EventBase: eventsourcing.NewEventBase[*Contact](AggregateContact, createdBy, aggregateId),
 	}
 }
 
@@ -22,6 +24,7 @@ func (e EvtContactCreated) EventType() string {
 func (e EvtContactCreated) Apply(contact *Contact) error {
 	contact.Id = e.AggregateId()
 	contact.CreatedAt = e.CreatedAt()
+	contact.CreatedBy = e.IssuedBy()
 
 	return nil
 }
@@ -32,9 +35,9 @@ type EvtContactEmailUpdated struct {
 	email string
 }
 
-func NewEvtContactEmailUpdated(aggregateId uuid.UUID, email string) EvtContactEmailUpdated {
+func NewEvtContactEmailUpdated(aggregateId uuid.UUID, updatedBy user.User, email string) EvtContactEmailUpdated {
 	return EvtContactEmailUpdated{
-		EventBase: eventsourcing.NewEventBase[*Contact](AggregateContact, aggregateId),
+		EventBase: eventsourcing.NewEventBase[*Contact](AggregateContact, updatedBy, aggregateId),
 		email:     email,
 	}
 }
@@ -57,9 +60,9 @@ type EvtContactNameUpdated struct {
 	lastName  string
 }
 
-func NewEvtContactNameUpdated(aggregateId uuid.UUID, firstName string, lastName string) EvtContactNameUpdated {
+func NewEvtContactNameUpdated(aggregateId uuid.UUID, updatedBy user.User, firstName string, lastName string) EvtContactNameUpdated {
 	return EvtContactNameUpdated{
-		EventBase: eventsourcing.NewEventBase[*Contact](AggregateContact, aggregateId),
+		EventBase: eventsourcing.NewEventBase[*Contact](AggregateContact, updatedBy, aggregateId),
 		firstName: firstName,
 		lastName:  lastName,
 	}
@@ -83,9 +86,9 @@ type EvtContactPhoneUpdated struct {
 	phone string
 }
 
-func NewEvtContactPhoneUpdated(aggregateId uuid.UUID, phone string) EvtContactPhoneUpdated {
+func NewEvtContactPhoneUpdated(aggregateId uuid.UUID, updatedBy user.User, phone string) EvtContactPhoneUpdated {
 	return EvtContactPhoneUpdated{
-		EventBase: eventsourcing.NewEventBase[*Contact](AggregateContact, aggregateId),
+		EventBase: eventsourcing.NewEventBase[*Contact](AggregateContact, updatedBy, aggregateId),
 		phone:     phone,
 	}
 }
@@ -105,9 +108,9 @@ type EvtContactDeleted struct {
 	eventsourcing.EventBase[*Contact]
 }
 
-func NewEvtContactDeleted(aggregateId uuid.UUID) EvtContactDeleted {
+func NewEvtContactDeleted(aggregateId uuid.UUID, deletedBy user.User) EvtContactDeleted {
 	return EvtContactDeleted{
-		EventBase: eventsourcing.NewEventBase[*Contact](AggregateContact, aggregateId),
+		EventBase: eventsourcing.NewEventBase[*Contact](AggregateContact, deletedBy, aggregateId),
 	}
 }
 

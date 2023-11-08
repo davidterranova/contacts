@@ -7,6 +7,7 @@ import (
 
 	"github.com/davidterranova/contacts/internal/domain"
 	"github.com/davidterranova/contacts/pkg/eventsourcing"
+	"github.com/davidterranova/contacts/pkg/user"
 	gomock "github.com/golang/mock/gomock"
 	uuid "github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
@@ -23,6 +24,7 @@ func testUpdateContactValidation(t *testing.T) {
 	ctx := context.Background()
 	container := testContainer(t)
 	contactUpdater := NewUpdateContact(container.contactCmdHandler)
+	cmdIssuer := user.New(uuid.New(), user.UserTypeAuthenticated)
 
 	testCases := []struct {
 		name          string
@@ -69,7 +71,7 @@ func testUpdateContactValidation(t *testing.T) {
 					Return(nil, nil)
 			}
 
-			_, err := contactUpdater.Update(ctx, tc.command)
+			_, err := contactUpdater.Update(ctx, tc.command, cmdIssuer)
 			assert.ErrorIs(t, err, tc.expectedError)
 		})
 	}
@@ -79,6 +81,7 @@ func testUpdateContact(t *testing.T) {
 	ctx := context.Background()
 	container := testContainer(t)
 	contactUpdater := NewUpdateContact(container.contactCmdHandler)
+	cmdIssuer := user.New(uuid.New(), user.UserTypeAuthenticated)
 
 	t.Run("successfully update contact", func(t *testing.T) {
 		uuid := uuid.New()
@@ -98,7 +101,7 @@ func testUpdateContact(t *testing.T) {
 				nil,
 			)
 
-		updatedContact, err := contactUpdater.Update(ctx, cmd)
+		updatedContact, err := contactUpdater.Update(ctx, cmd, cmdIssuer)
 		assert.NoError(t, err)
 		assert.Equal(t, cmd.ContactId, updatedContact.Id.String())
 		assert.Equal(t, cmd.FirstName, updatedContact.FirstName)
@@ -118,7 +121,7 @@ func testUpdateContact(t *testing.T) {
 				eventsourcing.ErrAggregateNotFound,
 			)
 
-		updatedContact, err := contactUpdater.Update(ctx, cmd)
+		updatedContact, err := contactUpdater.Update(ctx, cmd, cmdIssuer)
 		assert.ErrorIs(t, err, ErrNotFound)
 		assert.Nil(t, updatedContact)
 	})
@@ -137,8 +140,28 @@ func testUpdateContact(t *testing.T) {
 				errors.New("internal error"),
 			)
 
-		updatedContact, err := contactUpdater.Update(ctx, cmd)
+		updatedContact, err := contactUpdater.Update(ctx, cmd, cmdIssuer)
 		assert.ErrorIs(t, err, ErrInternal)
+		assert.Nil(t, updatedContact)
+	})
+
+	t.Run("not owning contact", func(t *testing.T) {
+		cmd := CmdUpdateContact{
+			ContactId: uuid.NewString(),
+			FirstName: "John",
+		}
+		cmdWrongIssuer := user.New(uuid.New(), user.UserTypeAuthenticated)
+
+		container.contactCmdHandler.EXPECT().
+			Handle(gomock.Any()).
+			Times(1).
+			Return(
+				nil,
+				ErrForbidden,
+			)
+
+		updatedContact, err := contactUpdater.Update(ctx, cmd, cmdWrongIssuer)
+		assert.ErrorIs(t, err, ErrForbidden)
 		assert.Nil(t, updatedContact)
 	})
 }

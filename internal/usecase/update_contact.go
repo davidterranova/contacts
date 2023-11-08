@@ -6,6 +6,7 @@ import (
 
 	"github.com/davidterranova/contacts/internal/domain"
 	"github.com/davidterranova/contacts/pkg/eventsourcing"
+	"github.com/davidterranova/contacts/pkg/user"
 	"github.com/go-playground/validator"
 	uuid "github.com/google/uuid"
 )
@@ -30,7 +31,7 @@ func NewUpdateContact(commandHandler eventsourcing.CommandHandler[*domain.Contac
 	}
 }
 
-func (h UpdateContact) Update(ctx context.Context, cmd CmdUpdateContact) (*domain.Contact, error) {
+func (h UpdateContact) Update(ctx context.Context, cmd CmdUpdateContact, cmdIssuedBy user.User) (*domain.Contact, error) {
 	err := h.validator.Struct(cmd)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %s", ErrInvalidCommand, err)
@@ -41,7 +42,7 @@ func (h UpdateContact) Update(ctx context.Context, cmd CmdUpdateContact) (*domai
 		return nil, fmt.Errorf("%w: %s", ErrInvalidCommand, err)
 	}
 
-	checkedCmd := newCmdUpdateContact(uuid, cmd)
+	checkedCmd := newCmdUpdateContact(uuid, cmd, cmdIssuedBy)
 	return handleErrs(h.commandHandler.Handle(checkedCmd))
 }
 
@@ -50,11 +51,12 @@ type cmdUpdateContact struct {
 	CmdUpdateContact
 }
 
-func newCmdUpdateContact(contactId uuid.UUID, data CmdUpdateContact) cmdUpdateContact {
+func newCmdUpdateContact(contactId uuid.UUID, data CmdUpdateContact, cmdIssuedBy user.User) cmdUpdateContact {
 	return cmdUpdateContact{
 		BaseCommand: eventsourcing.NewBaseCommand[*domain.Contact](
 			contactId,
 			domain.AggregateContact,
+			cmdIssuedBy,
 		),
 		CmdUpdateContact: data,
 	}
@@ -63,6 +65,9 @@ func newCmdUpdateContact(contactId uuid.UUID, data CmdUpdateContact) cmdUpdateCo
 func (c cmdUpdateContact) Apply(aggregate *domain.Contact) ([]eventsourcing.Event[*domain.Contact], error) {
 	if aggregate.AggregateId() == uuid.Nil {
 		return nil, eventsourcing.ErrAggregateNotFound
+	}
+	if err := checkUpdatePolicy(c, aggregate); err != nil {
+		return nil, err
 	}
 	if aggregate.DeletedAt != nil {
 		return nil, ErrNotFound
@@ -77,15 +82,23 @@ func (c cmdUpdateContact) Apply(aggregate *domain.Contact) ([]eventsourcing.Even
 			aggregate.LastName = c.LastName
 		}
 
-		events = append(events, domain.NewEvtContactNameUpdated(c.AggregateId(), aggregate.FirstName, aggregate.LastName))
+		events = append(events, domain.NewEvtContactNameUpdated(c.AggregateId(), c.IssuedBy(), aggregate.FirstName, aggregate.LastName))
 	}
 
 	if c.Email != "" && aggregate.Email != c.Email {
-		events = append(events, domain.NewEvtContactEmailUpdated(c.AggregateId(), c.Email))
+		events = append(events, domain.NewEvtContactEmailUpdated(c.AggregateId(), c.IssuedBy(), c.Email))
 	}
 	if c.Phone != "" && aggregate.Phone != c.Phone {
-		events = append(events, domain.NewEvtContactPhoneUpdated(c.AggregateId(), c.Phone))
+		events = append(events, domain.NewEvtContactPhoneUpdated(c.AggregateId(), c.IssuedBy(), c.Phone))
 	}
 
 	return events, nil
+}
+
+func checkUpdatePolicy(cmd cmdUpdateContact, aggregate *domain.Contact) error {
+	if cmd.IssuedBy() == aggregate.CreatedBy {
+		return nil
+	}
+
+	return ErrForbidden
 }

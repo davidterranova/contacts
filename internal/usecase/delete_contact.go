@@ -7,6 +7,7 @@ import (
 
 	"github.com/davidterranova/contacts/internal/domain"
 	"github.com/davidterranova/contacts/pkg/eventsourcing"
+	"github.com/davidterranova/contacts/pkg/user"
 	"github.com/go-playground/validator"
 	uuid "github.com/google/uuid"
 )
@@ -27,7 +28,7 @@ func NewDeleteContact(commandHandler eventsourcing.CommandHandler[*domain.Contac
 	}
 }
 
-func (h DeleteContactHandler) Delete(ctx context.Context, cmd CmdDeleteContact) error {
+func (h DeleteContactHandler) Delete(ctx context.Context, cmd CmdDeleteContact, cmdIssuedBy user.User) error {
 	err := h.validator.Struct(cmd)
 	if err != nil {
 		return fmt.Errorf("%w: %s", ErrInvalidCommand, err)
@@ -38,7 +39,7 @@ func (h DeleteContactHandler) Delete(ctx context.Context, cmd CmdDeleteContact) 
 		return fmt.Errorf("%w: %s", ErrInvalidCommand, err)
 	}
 
-	_, err = h.commandHandler.Handle(newCmdDeleteContact(uuid))
+	_, err = h.commandHandler.Handle(newCmdDeleteContact(uuid, cmdIssuedBy))
 	switch {
 	case errors.Is(err, ErrNotFound):
 		return err
@@ -55,11 +56,12 @@ type cmdDeleteContact struct {
 	eventsourcing.BaseCommand[*domain.Contact]
 }
 
-func newCmdDeleteContact(contactId uuid.UUID) cmdDeleteContact {
+func newCmdDeleteContact(contactId uuid.UUID, cmdIssuedBy user.User) cmdDeleteContact {
 	return cmdDeleteContact{
 		BaseCommand: eventsourcing.NewBaseCommand[*domain.Contact](
 			contactId,
 			domain.AggregateContact,
+			cmdIssuedBy,
 		),
 	}
 }
@@ -68,11 +70,25 @@ func (c cmdDeleteContact) Apply(aggregate *domain.Contact) ([]eventsourcing.Even
 	if aggregate.AggregateId() == uuid.Nil {
 		return nil, eventsourcing.ErrAggregateNotFound
 	}
+	if err := checkDeletePolicy(c, aggregate); err != nil {
+		return nil, err
+	}
 	if aggregate.DeletedAt != nil {
 		return nil, ErrNotFound
 	}
 
 	return []eventsourcing.Event[*domain.Contact]{
-		domain.NewEvtContactDeleted(c.AggregateId()),
+		domain.NewEvtContactDeleted(
+			c.AggregateId(),
+			c.IssuedBy(),
+		),
 	}, nil
+}
+
+func checkDeletePolicy(cmd cmdDeleteContact, aggregate *domain.Contact) error {
+	if cmd.IssuedBy() == aggregate.CreatedBy {
+		return nil
+	}
+
+	return ErrForbidden
 }

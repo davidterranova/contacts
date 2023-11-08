@@ -12,6 +12,7 @@ var (
 	ErrInternal       = errors.New("internal error")
 	ErrInvalidCommand = errors.New("invalid command")
 	ErrNotFound       = errors.New("not found")
+	ErrForbidden      = errors.New("forbidden")
 )
 
 func handleErrs(contact *domain.Contact, err error) (*domain.Contact, error) {

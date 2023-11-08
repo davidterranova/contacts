@@ -6,7 +6,9 @@ import (
 	"testing"
 
 	"github.com/davidterranova/contacts/internal/domain"
+	"github.com/davidterranova/contacts/pkg/user"
 	gomock "github.com/golang/mock/gomock"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -34,6 +36,7 @@ func testCreateContactValidation(t *testing.T) {
 	ctx := context.Background()
 	container := testContainer(t)
 	contactCreator := NewCreateContact(container.contactCmdHandler)
+	cmdIssuer := user.New(uuid.New(), user.UserTypeAuthenticated)
 
 	testCases := []struct {
 		name          string
@@ -83,7 +86,7 @@ func testCreateContactValidation(t *testing.T) {
 					Return(nil, nil)
 			}
 
-			_, err := contactCreator.Create(ctx, tc.command)
+			_, err := contactCreator.Create(ctx, tc.command, cmdIssuer)
 			assert.ErrorIs(t, err, tc.expectedError)
 		})
 	}
@@ -93,6 +96,7 @@ func testCreateContact(t *testing.T) {
 	ctx := context.Background()
 	container := testContainer(t)
 	contactCreator := NewCreateContact(container.contactCmdHandler)
+	cmdIssuer := user.New(uuid.New(), user.UserTypeAuthenticated)
 
 	t.Run("successful contact creation", func(t *testing.T) {
 		cmd := CmdCreateContact{
@@ -111,16 +115,18 @@ func testCreateContact(t *testing.T) {
 					LastName:  cmd.LastName,
 					Email:     cmd.Email,
 					Phone:     cmd.Phone,
+					CreatedBy: cmdIssuer,
 				},
 				nil,
 			)
 
-		createdContact, err := contactCreator.Create(ctx, cmd)
+		createdContact, err := contactCreator.Create(ctx, cmd, cmdIssuer)
 		assert.NoError(t, err)
 		assert.Equal(t, cmd.FirstName, createdContact.FirstName)
 		assert.Equal(t, cmd.LastName, createdContact.LastName)
 		assert.Equal(t, cmd.Email, createdContact.Email)
 		assert.Equal(t, cmd.Phone, createdContact.Phone)
+		assert.Equal(t, cmdIssuer, createdContact.CreatedBy)
 	})
 
 	t.Run("repository unexpected error", func(t *testing.T) {
@@ -139,7 +145,7 @@ func testCreateContact(t *testing.T) {
 				errors.New("unexpected error"),
 			)
 
-		contact, err := contactCreator.Create(ctx, cmd)
+		contact, err := contactCreator.Create(ctx, cmd, cmdIssuer)
 		assert.ErrorIs(t, err, ErrInternal)
 		assert.Nil(t, contact)
 	})
