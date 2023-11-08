@@ -59,7 +59,7 @@ func (r *InMemoryContactRepository) Get(_ context.Context, id uuid.UUID) (*domai
 func (r *InMemoryContactRepository) List(ctx context.Context, filter domain.Filter) ([]*domain.Contact, error) {
 	contacts := make([]*domain.Contact, 0, len(r.contacts))
 	for _, contact := range r.contacts {
-		if fiterBy(filter, contact) {
+		if filterBy(filter, contact) {
 			contacts = append(contacts, contact)
 		}
 	}
@@ -67,7 +67,7 @@ func (r *InMemoryContactRepository) List(ctx context.Context, filter domain.Filt
 	return contacts, nil
 }
 
-func fiterBy(filter domain.Filter, contact *domain.Contact) bool {
+func filterBy(filter domain.Filter, contact *domain.Contact) bool {
 	if filter.CreatedBy() != nil && *filter.CreatedBy() != contact.CreatedBy {
 		return false
 	}
