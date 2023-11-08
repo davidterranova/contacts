@@ -5,9 +5,9 @@ import "github.com/google/uuid"
 type UserType string
 
 const (
-	UserTypeSystem        UserType = "system"
-	UserTypeAuthenticated UserType = "authenticated"
-	UserTypeUnknown       UserType = "unknown"
+	UserTypeSystem          UserType = "system"
+	UserTypeAuthenticated   UserType = "authenticated"
+	UserTypeUnauthenticated UserType = "unauthenticated"
 )
 
 type User interface {
@@ -22,8 +22,12 @@ func New(id uuid.UUID, userType UserType) User {
 	case UserTypeSystem:
 		return &UserSystem{id: id}
 	default:
-		return &UserUnknown{}
+		return &UserUnauthenticated{}
 	}
+}
+
+func NewUnauthenticated() *UserAuthenticated {
+	return &UserAuthenticated{id: uuid.Nil}
 }
 
 type UserAuthenticated struct {
@@ -50,16 +54,12 @@ func (u UserSystem) Type() UserType {
 	return UserTypeSystem
 }
 
-type UserUnknown struct{}
+type UserUnauthenticated struct{}
 
-func (u UserUnknown) Id() uuid.UUID {
+func (u UserUnauthenticated) Id() uuid.UUID {
 	return uuid.Nil
 }
 
-func (u UserUnknown) Type() UserType {
-	return UserTypeUnknown
-}
-
-func NewEmpty() User {
-	return &UserUnknown{}
+func (u UserUnauthenticated) Type() UserType {
+	return UserTypeUnauthenticated
 }
