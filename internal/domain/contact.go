@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/davidterranova/contacts/pkg/eventsourcing"
+	"github.com/davidterranova/contacts/pkg/user"
 	"github.com/google/uuid"
 )
 
@@ -15,6 +16,7 @@ type Contact struct {
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	DeletedAt *time.Time
+	CreatedBy user.User
 
 	FirstName string
 	LastName  string
