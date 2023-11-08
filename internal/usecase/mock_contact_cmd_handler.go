@@ -7,7 +7,7 @@ package usecase
 import (
         domain "github.com/davidterranova/contacts/internal/domain"
         eventsourcing "github.com/davidterranova/contacts/pkg/eventsourcing"
-        gomock "github.com/golang/mock/gomock"
+        "go.uber.org/mock/gomock"
         reflect "reflect"
 )
 
