@@ -3,6 +3,8 @@ package eventsourcing
 import (
 	"time"
 
+	"github.com/davidterranova/contacts/pkg/user"
+
 	"github.com/google/uuid"
 )
 
@@ -12,6 +14,7 @@ type Event[T Aggregate] interface {
 	AggregateType() AggregateType
 	EventType() string
 	CreatedAt() time.Time
+	IssuedBy() user.User
 	Apply(T) error
 }
 
@@ -20,13 +23,15 @@ type EventBase[T Aggregate] struct {
 	aggregateType AggregateType
 	aggregateId   uuid.UUID
 	createdAt     time.Time
+	issuedBy      user.User
 }
 
-func NewEventBase[T Aggregate](aggregateType AggregateType, aggregateId uuid.UUID) EventBase[T] {
+func NewEventBase[T Aggregate](aggregateType AggregateType, issuedBy user.User, aggregateId uuid.UUID) EventBase[T] {
 	return EventBase[T]{
 		id:            uuid.New(),
 		aggregateType: aggregateType,
 		aggregateId:   aggregateId,
+		issuedBy:      issuedBy,
 		createdAt:     time.Now().UTC(),
 	}
 }
@@ -45,4 +50,8 @@ func (e EventBase[T]) CreatedAt() time.Time {
 
 func (e EventBase[T]) AggregateType() AggregateType {
 	return e.aggregateType
+}
+
+func (e EventBase[T]) IssuedBy() user.User {
+	return e.issuedBy
 }
