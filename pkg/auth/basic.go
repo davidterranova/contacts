@@ -12,11 +12,11 @@ func GrantAnyAccess() func(authToken string) (user.User, error) {
 	return func(authToken string) (user.User, error) {
 		reqUsername, _, ok := parseBasicAuth(authToken)
 		if !ok {
-			return *user.NewUnauthenticated(), ErrUnauthorized
+			return user.Unauthenticated, ErrUnauthorized
 		}
 
 		id := uuid.NewSHA1(uuid.NameSpaceOID, []byte(reqUsername))
-		return user.New(id, user.UserTypeAuthenticated), nil
+		return user.New(id), nil
 	}
 }
 
@@ -24,15 +24,15 @@ func BasicAuth(username string, password string) func(authToken string) (user.Us
 	return func(authToken string) (user.User, error) {
 		reqUsername, reqPassword, ok := parseBasicAuth(authToken)
 		if !ok {
-			return user.NewUnauthenticated(), ErrUnauthorized
+			return user.Unauthenticated, ErrUnauthorized
 		}
 
 		if reqUsername != username || reqPassword != password {
-			return user.NewUnauthenticated(), ErrUnauthorized
+			return user.Unauthenticated, ErrUnauthorized
 		}
 
 		id := uuid.NewSHA1(uuid.NameSpaceOID, []byte(username))
-		return user.New(id, user.UserTypeAuthenticated), nil
+		return user.New(id), nil
 	}
 }
 

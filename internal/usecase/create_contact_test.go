@@ -36,7 +36,7 @@ func testCreateContactValidation(t *testing.T) {
 	ctx := context.Background()
 	container := testContainer(t)
 	contactCreator := NewCreateContact(container.contactCmdHandler)
-	cmdIssuer := user.New(uuid.New(), user.UserTypeAuthenticated)
+	cmdIssuer := user.New(uuid.New())
 
 	testCases := []struct {
 		name          string
@@ -96,7 +96,7 @@ func testCreateContact(t *testing.T) {
 	ctx := context.Background()
 	container := testContainer(t)
 	contactCreator := NewCreateContact(container.contactCmdHandler)
-	cmdIssuer := user.New(uuid.New(), user.UserTypeAuthenticated)
+	cmdIssuer := user.New(uuid.New())
 
 	t.Run("successful contact creation", func(t *testing.T) {
 		cmd := CmdCreateContact{

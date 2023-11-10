@@ -31,7 +31,7 @@ func BasicAuthFn(username string, password string) AuthFn {
 	return func(r *http.Request) (user.User, error) {
 		user, err := auth.BasicAuth(username, password)(r.Header.Get("Authorization"))
 		if err != nil {
-			return nil, fmt.Errorf("%w: %s", auth.ErrUnauthorized, err.Error())
+			return user, fmt.Errorf("%w: %s", auth.ErrUnauthorized, err.Error())
 		}
 
 		return user, nil
@@ -42,7 +42,7 @@ func GrantAnyFn() AuthFn {
 	return func(r *http.Request) (user.User, error) {
 		user, err := auth.GrantAnyAccess()(r.Header.Get("Authorization"))
 		if err != nil {
-			return nil, fmt.Errorf("%w: %s", auth.ErrUnauthorized, err.Error())
+			return user, fmt.Errorf("%w: %s", auth.ErrUnauthorized, err.Error())
 		}
 
 		return user, nil

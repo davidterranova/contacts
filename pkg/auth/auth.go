@@ -19,7 +19,7 @@ var (
 func UserFromContext(ctx context.Context) (user.User, error) {
 	u, ok := ctx.Value(RequestCtxUserKey).(user.User)
 	if !ok {
-		return user.NewUnauthenticated(), ErrUserNotFound
+		return user.Unauthenticated, ErrUserNotFound
 	}
 
 	return u, nil

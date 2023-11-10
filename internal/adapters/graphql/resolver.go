@@ -48,7 +48,7 @@ func (r *Resolver) CreateContact(ctx context.Context, input model.NewContact) (*
 			Email:     input.Email,
 			Phone:     input.Phone,
 		},
-		user.NewUnauthenticated(), // TODO: to fix
+		user.Unauthenticated, // TODO: to fix
 	)
 	if err != nil {
 		return nil, err
