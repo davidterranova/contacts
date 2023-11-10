@@ -4,26 +4,25 @@ services:
   db:
     image: public.ecr.aws/docker/library/postgres:14.3
     restart: always
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=contacts
+    env_file: .env
     volumes:
       - ./pkg/pg/bootstrap:/docker-entrypoint-initdb.d
     command: [ "postgres", "-c", "log_statement=all" ]
+    ports:
+      - "5432:5432"
     healthcheck:
-      test: ['CMD', 'pg_isready']  #  -U postgres
+      test: ['CMD', '-U postgres', 'pg_isready']  #  -U postgres
       interval: 5s
       timeout: 5s
       retries: 2
   
-  migrate:
-    build:
-      dockerfile: Dockerfile.dbmigration
-      context: ./pkg/pg
-    env_file: .env
-    depends_on:
-      - db
-    volumes:
-      - ./pkg/pg/migrations:/migrations:ro
-    command: [ "/migrate.sh" ]
+  # migrate:
+  #   build:
+  #     dockerfile: Dockerfile.dbmigration
+  #     context: ./pkg/pg
+  #   env_file: .env
+  #   depends_on:
+  #     - db
+  #   volumes:
+  #     - ./pkg/pg/migrations:/migrations:ro
+  #   command: [ "/migrate.sh" ]

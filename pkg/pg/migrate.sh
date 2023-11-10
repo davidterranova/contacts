@@ -12,4 +12,4 @@ flyway migrate \
   -password=${FLYWAY_DB_PASSWORD} \
   -url=jdbc:postgresql://${FLYWAY_DB_HOST}:${FLYWAY_DB_PORT}/${FLYWAY_DB_DATABASE}?${FLYWAY_DB_PARAMS} \
   -connectRetries=5 \
-  -locations='filesystem:/migrations/templates'
+  -locations='filesystem:/migrations'
