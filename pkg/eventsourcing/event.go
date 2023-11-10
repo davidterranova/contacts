@@ -1,6 +1,7 @@
 package eventsourcing
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/davidterranova/contacts/pkg/user"
@@ -13,39 +14,44 @@ type Event[T Aggregate] interface {
 	AggregateId() uuid.UUID
 	AggregateType() AggregateType
 	EventType() string
-	CreatedAt() time.Time
+	IssuedAt() time.Time
 	IssuedBy() user.User
 	Apply(T) error
+
+	// SetBase(EventBase[T]) is used internally by eventsourcing package
+	SetBase(EventBase[T])
 }
 
 type EventBase[T Aggregate] struct {
-	id            uuid.UUID
+	eventId       uuid.UUID
+	eventIssuesAt time.Time
+	eventIssuedBy user.User
+	eventType     string
 	aggregateType AggregateType
 	aggregateId   uuid.UUID
-	createdAt     time.Time
-	issuedBy      user.User
 }
 
-func NewEventBase[T Aggregate](aggregateType AggregateType, issuedBy user.User, aggregateId uuid.UUID) EventBase[T] {
+func NewEventBase[T Aggregate](aggregateType AggregateType, eventType string, aggregateId uuid.UUID, issuedBy user.User) EventBase[T] {
 	return EventBase[T]{
-		id:            uuid.New(),
+		eventId:       uuid.New(),
+		eventIssuedBy: issuedBy,
+		eventIssuesAt: time.Now().UTC(),
+		eventType:     eventType,
 		aggregateType: aggregateType,
 		aggregateId:   aggregateId,
-		issuedBy:      issuedBy,
-		createdAt:     time.Now().UTC(),
 	}
 }
 
 func (e EventBase[T]) Id() uuid.UUID {
-	return e.id
+	return e.eventId
 }
 
 func (e EventBase[T]) AggregateId() uuid.UUID {
 	return e.aggregateId
 }
 
-func (e EventBase[T]) CreatedAt() time.Time {
-	return e.createdAt
+func (e EventBase[T]) IssuedAt() time.Time {
+	return e.eventIssuesAt
 }
 
 func (e EventBase[T]) AggregateType() AggregateType {
@@ -53,5 +59,22 @@ func (e EventBase[T]) AggregateType() AggregateType {
 }
 
 func (e EventBase[T]) IssuedBy() user.User {
-	return e.issuedBy
+	return e.eventIssuedBy
+}
+
+func (e EventBase[T]) EventType() string {
+	return e.eventType
+}
+
+func (e *EventBase[T]) SetBase(base EventBase[T]) {
+	e.eventId = base.eventId
+	e.eventIssuesAt = base.eventIssuesAt
+	e.eventIssuedBy = base.eventIssuedBy
+	e.eventType = base.eventType
+	e.aggregateType = base.aggregateType
+	e.aggregateId = base.aggregateId
+}
+
+func (e EventBase[T]) String() string {
+	return fmt.Sprintf("#%s by:%s at:%s %s.%s on:%s", e.eventId, e.eventIssuedBy, e.eventIssuesAt, e.aggregateType, e.eventType, e.aggregateId)
 }

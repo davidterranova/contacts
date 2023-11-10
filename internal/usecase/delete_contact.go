@@ -78,10 +78,7 @@ func (c cmdDeleteContact) Apply(aggregate *domain.Contact) ([]eventsourcing.Even
 	}
 
 	return []eventsourcing.Event[*domain.Contact]{
-		domain.NewEvtContactDeleted(
-			c.AggregateId(),
-			c.IssuedBy(),
-		),
+		domain.NewEvtContactDeleted(c.AggregateId(), c.IssuedBy()),
 	}, nil
 }
 
