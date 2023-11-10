@@ -1,0 +1,11 @@
+# DB
+DB_NAME=contacts
+DB_CONN_STRING=postgres://postgres:password@localhost:5432/contacts?search_path=event_store
+
+# FLYWAY
+FLYWAY_DB_DATABASE=contacts
+FLYWAY_DEFAULT_SCHEMA=event_store
+FLYWAY_DB_USER_NAME=postgres
+FLYWAY_DB_PASSWORD=password
+FLYWAY_DB_HOST=db
+FLYWAY_DB_PORT=5432
