@@ -17,6 +17,7 @@ import (
 
 	ihttp "github.com/davidterranova/contacts/internal/adapters/http"
 	"github.com/davidterranova/contacts/pkg/eventsourcing"
+	"github.com/davidterranova/contacts/pkg/pg"
 	"github.com/davidterranova/contacts/pkg/xhttp"
 	"github.com/gorilla/mux"
 	"github.com/rs/zerolog/log"
@@ -34,9 +35,17 @@ func runServer(cmd *cobra.Command, args []string) {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer cancel()
 
-	eventStream := eventsourcing.NewInMemoryPublisher[*domain.Contact](context.Background(), 100)
-	eventStore := eventsourcing.NewInMemoryEventStore[*domain.Contact]()
-	contactWriteModel := eventsourcing.NewCommandHandler[*domain.Contact](
+	eventStream := eventsourcing.NewInMemoryPublisher[domain.Contact](context.Background(), 100)
+	// eventStore := eventsourcing.NewInMemoryEventStore[domain.Contact]()
+	pg, err := pg.Open(pg.DBConfig{
+		Name:       "postgres",
+		ConnString: "postgres://postgres:password@127.0.0.1:5432/contacts?sslmode=disable&search_path=event_store",
+	})
+	if err != nil {
+		log.Ctx(ctx).Panic().Err(err).Msg("failed to open postgres connection")
+	}
+	eventStore := eventsourcing.NewPGEventStore[domain.Contact](pg, eventsourcing.NewRegistry[domain.Contact]())
+	contactWriteModel := eventsourcing.NewCommandHandler[domain.Contact](
 		eventStore,
 		eventStream,
 		func() *domain.Contact {

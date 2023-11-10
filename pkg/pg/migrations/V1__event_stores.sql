@@ -10,5 +10,5 @@ CREATE TABLE IF NOT EXISTS events (
   aggregate_id UUID NOT NULL,
   aggregate_type TEXT NOT NULL,
 
-  data JSONB
+  event_data JSONB
 );
