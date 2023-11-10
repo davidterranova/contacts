@@ -21,10 +21,10 @@ type CmdUpdateContact struct {
 
 type UpdateContact struct {
 	validator      *validator.Validate
-	commandHandler eventsourcing.CommandHandler[*domain.Contact]
+	commandHandler eventsourcing.CommandHandler[domain.Contact]
 }
 
-func NewUpdateContact(commandHandler eventsourcing.CommandHandler[*domain.Contact]) UpdateContact {
+func NewUpdateContact(commandHandler eventsourcing.CommandHandler[domain.Contact]) UpdateContact {
 	return UpdateContact{
 		validator:      validator.New(),
 		commandHandler: commandHandler,
@@ -62,7 +62,7 @@ func newCmdUpdateContact(contactId uuid.UUID, data CmdUpdateContact, cmdIssuedBy
 	}
 }
 
-func (c cmdUpdateContact) Apply(aggregate *domain.Contact) ([]eventsourcing.Event[*domain.Contact], error) {
+func (c cmdUpdateContact) Apply(aggregate *domain.Contact) ([]eventsourcing.Event[domain.Contact], error) {
 	if aggregate.AggregateId() == uuid.Nil {
 		return nil, eventsourcing.ErrAggregateNotFound
 	}
@@ -73,7 +73,7 @@ func (c cmdUpdateContact) Apply(aggregate *domain.Contact) ([]eventsourcing.Even
 		return nil, ErrNotFound
 	}
 
-	events := make([]eventsourcing.Event[*domain.Contact], 0)
+	events := make([]eventsourcing.Event[domain.Contact], 0)
 	if c.FirstName != "" || c.LastName != "" {
 		if c.FirstName != "" && c.FirstName != aggregate.FirstName {
 			aggregate.FirstName = c.FirstName

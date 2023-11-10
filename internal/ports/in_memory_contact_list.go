@@ -17,7 +17,7 @@ type InMemoryContactList struct {
 	contacts map[uuid.UUID]*domain.Contact
 }
 
-func NewInMemoryContactList(eventStream eventsourcing.Subscriber[*domain.Contact]) *InMemoryContactList {
+func NewInMemoryContactList(eventStream eventsourcing.Subscriber[domain.Contact]) *InMemoryContactList {
 	l := &InMemoryContactList{
 		contacts: map[uuid.UUID]*domain.Contact{},
 	}
@@ -26,7 +26,7 @@ func NewInMemoryContactList(eventStream eventsourcing.Subscriber[*domain.Contact
 	return l
 }
 
-func (l *InMemoryContactList) HandleEvent(e eventsourcing.Event[*domain.Contact]) {
+func (l *InMemoryContactList) HandleEvent(e eventsourcing.Event[domain.Contact]) {
 	var (
 		err error
 		c   *domain.Contact

@@ -8,7 +8,7 @@ import (
 
 type CommandHandler[T Aggregate] interface {
 	// Handle is the global command handler that should be called by the application
-	Handle(Command[T]) (T, error)
+	Handle(Command[T]) (*T, error)
 
 	// HydrateAggregate an aggregate from already published events (internal)
 	// HydrateAggregate(aggregateType AggregateType, aggregateId uuid.UUID) (T, error)
@@ -17,7 +17,7 @@ type CommandHandler[T Aggregate] interface {
 	// Apply(aggregate T, command Command[T]) (T, []Event[T], error)
 }
 
-type AggregateFactory[T Aggregate] func() T
+type AggregateFactory[T Aggregate] func() *T
 
 type commandHandler[T Aggregate] struct {
 	eventStore     EventStore[T]
@@ -33,33 +33,33 @@ func NewCommandHandler[T Aggregate](eventStore EventStore[T], eventPublisher Pub
 	}
 }
 
-func (h *commandHandler[T]) Handle(c Command[T]) (T, error) {
+func (h *commandHandler[T]) Handle(c Command[T]) (*T, error) {
 	// hydrate aggregate
 	aggregate, err := h.HydrateAggregate(c.AggregateType(), c.AggregateId())
 	if err != nil {
-		return *new(T), fmt.Errorf("failed to hydrate aggregate(%s#%s): %w", c.AggregateType(), c.AggregateId(), err)
+		return new(T), fmt.Errorf("failed to hydrate aggregate(%s#%s): %w", c.AggregateType(), c.AggregateId(), err)
 	}
 
 	// check command validity for aggregate
 	aggregate, events, err := h.Apply(aggregate, c)
 	if err != nil {
-		return *new(T), fmt.Errorf("command (%T) rejected on aggregate(%s#%s): %w", c, c.AggregateType(), c.AggregateId(), err)
+		return new(T), fmt.Errorf("command (%T) rejected on aggregate(%s#%s): %w", c, c.AggregateType(), c.AggregateId(), err)
 	}
 
 	// persist and publish events
 	err = h.PersistAndPublish(events...)
 	if err != nil {
-		return *new(T), fmt.Errorf("failed to persist and publish events for aggregate(%s#%s): %w", c.AggregateType(), c.AggregateId(), err)
+		return new(T), fmt.Errorf("failed to persist and publish events for aggregate(%s#%s): %w", c.AggregateType(), c.AggregateId(), err)
 	}
 
 	// return aggregate
 	return aggregate, nil
 }
 
-func (h *commandHandler[T]) HydrateAggregate(aggregateType AggregateType, aggregateId uuid.UUID) (T, error) {
+func (h *commandHandler[T]) HydrateAggregate(aggregateType AggregateType, aggregateId uuid.UUID) (*T, error) {
 	events, err := h.eventStore.Load(aggregateType, aggregateId)
 	if err != nil {
-		return *new(T), fmt.Errorf("failed to load events for aggregate(%s#%s): %w", aggregateType, aggregateId, err)
+		return new(T), fmt.Errorf("failed to load events for aggregate(%s#%s): %w", aggregateType, aggregateId, err)
 	}
 
 	// create new aggregate
@@ -69,7 +69,7 @@ func (h *commandHandler[T]) HydrateAggregate(aggregateType AggregateType, aggreg
 	for _, event := range events {
 		err := event.Apply(aggregate)
 		if err != nil {
-			return *new(T), fmt.Errorf("failed to apply event(%s) to aggregate(%s#%s): %w", event.EventType(), aggregateType, aggregateId, err)
+			return new(T), fmt.Errorf("failed to apply event(%s) to aggregate(%s#%s): %w", event.EventType(), aggregateType, aggregateId, err)
 		}
 	}
 
@@ -77,17 +77,18 @@ func (h *commandHandler[T]) HydrateAggregate(aggregateType AggregateType, aggreg
 	return aggregate, nil
 }
 
-func (h *commandHandler[T]) Apply(aggregate T, c Command[T]) (T, []Event[T], error) {
+func (h *commandHandler[T]) Apply(aggregate *T, c Command[T]) (*T, []Event[T], error) {
+	agg := *aggregate
 	// check if command is valid for aggregate
 	events, err := c.Apply(aggregate)
 	if err != nil {
-		return *new(T), nil, fmt.Errorf("command (%T) is invalid for aggregate(%s#%s): %w", c, aggregate.AggregateType(), aggregate.AggregateId(), err)
+		return new(T), nil, fmt.Errorf("command (%T) is invalid for aggregate(%s#%s): %w", c, agg.AggregateType(), agg.AggregateId(), err)
 	}
 
 	for _, event := range events {
 		err := event.Apply(aggregate)
 		if err != nil {
-			return *new(T), nil, fmt.Errorf("failed to apply event(%s) to aggregate(%s#%s): %w", event.EventType(), aggregate.AggregateType(), aggregate.AggregateId(), err)
+			return new(T), nil, fmt.Errorf("failed to apply event(%s) to aggregate(%s#%s): %w", event.EventType(), agg.AggregateType(), agg.AggregateId(), err)
 		}
 	}
 
