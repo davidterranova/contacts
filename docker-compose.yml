@@ -16,13 +16,13 @@ services:
       timeout: 5s
       retries: 2
   
-  # migrate:
-  #   build:
-  #     dockerfile: Dockerfile.dbmigration
-  #     context: ./pkg/pg
-  #   env_file: .env
-  #   depends_on:
-  #     - db
-  #   volumes:
-  #     - ./pkg/pg/migrations:/migrations:ro
-  #   command: [ "/migrate.sh" ]
+  migrate:
+    build:
+      dockerfile: Dockerfile.dbmigration
+      context: ./pkg/pg
+    env_file: .env
+    depends_on:
+      - db
+    volumes:
+      - ./pkg/pg/migrations:/migrations:ro
+    command: [ "/migrate.sh" ]

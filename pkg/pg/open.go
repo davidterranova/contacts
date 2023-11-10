@@ -13,7 +13,7 @@ const postgresDriverName = "pgx"
 
 type DBConfig struct {
 	Name               string                `envconfig:"NAME" required:"true"`
-	ConnString         xstrings.SecretString `envconfig:"WRITE_CONN_STRING" required:"true"`
+	ConnString         xstrings.SecretString `envconfig:"CONN_STRING" required:"true"`
 	MaxOpenConnections int                   `envconfig:"MAX_OPEN_CONNECTIONS" default:"25"`
 	MaxIdleConnections int                   `envconfig:"MAX_IDLE_CONNECTIONS" default:"10"`
 	ConnMaxIdleTime    time.Duration         `envconfig:"CONN_MAX_IDLE_TIME" default:"1m"`
