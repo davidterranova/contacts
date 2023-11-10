@@ -14,7 +14,7 @@ type Command[T Aggregate] interface {
 	IssuedBy() user.User
 
 	// Check for validity of command on aggregate, mutate the aggregate and return newly emitted events
-	Apply(T) ([]Event[T], error)
+	Apply(*T) ([]Event[T], error)
 }
 
 type BaseCommand[T Aggregate] struct {

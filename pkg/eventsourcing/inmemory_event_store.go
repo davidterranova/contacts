@@ -19,8 +19,10 @@ func NewInMemoryEventStore[T Aggregate]() *eventStore[T] {
 
 func (s *eventStore[T]) Store(events ...Event[T]) error {
 	for _, event := range events {
+		//nolint:staticcheck
 		localEvents, ok := s.storage[event.AggregateId()]
 		if !ok {
+			//nolint:staticcheck
 			localEvents = make([]Event[T], 0)
 		}
 		localEvents = append(s.storage[event.AggregateId()], event)

@@ -2,6 +2,7 @@ package user
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/google/uuid"
 )
@@ -73,4 +74,8 @@ func (u *User) UnmarshalJSON(data []byte) error {
 	u.userType = UserType(a.Type)
 
 	return nil
+}
+
+func (u User) String() string {
+	return fmt.Sprintf("%s:%s", u.userType, u.id)
 }

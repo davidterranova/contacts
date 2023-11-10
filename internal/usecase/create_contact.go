@@ -20,10 +20,10 @@ type CmdCreateContact struct {
 
 type CreateContact struct {
 	validator      *validator.Validate
-	commandHandler eventsourcing.CommandHandler[*domain.Contact]
+	commandHandler eventsourcing.CommandHandler[domain.Contact]
 }
 
-func NewCreateContact(commandHandler eventsourcing.CommandHandler[*domain.Contact]) CreateContact {
+func NewCreateContact(commandHandler eventsourcing.CommandHandler[domain.Contact]) CreateContact {
 	return CreateContact{
 		commandHandler: commandHandler,
 		validator:      validator.New(),
@@ -56,12 +56,12 @@ func newCmdCreateContact(data CmdCreateContact, cmdIssuedBy user.User) cmdCreate
 	}
 }
 
-func (c cmdCreateContact) Apply(aggregate *domain.Contact) ([]eventsourcing.Event[*domain.Contact], error) {
+func (c cmdCreateContact) Apply(aggregate *domain.Contact) ([]eventsourcing.Event[domain.Contact], error) {
 	if aggregate.AggregateId() != uuid.Nil {
 		return nil, eventsourcing.ErrAggregateAlreadyExists
 	}
 
-	return []eventsourcing.Event[*domain.Contact]{
+	return []eventsourcing.Event[domain.Contact]{
 		domain.NewEvtContactCreated(c.AggregateId(), c.IssuedBy()),
 		domain.NewEvtContactEmailUpdated(c.AggregateId(), c.IssuedBy(), c.Email),
 		domain.NewEvtContactNameUpdated(c.AggregateId(), c.IssuedBy(), c.FirstName, c.LastName),

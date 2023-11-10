@@ -16,7 +16,7 @@ type Event[T Aggregate] interface {
 	EventType() string
 	IssuedAt() time.Time
 	IssuedBy() user.User
-	Apply(T) error
+	Apply(*T) error
 
 	// SetBase(EventBase[T]) is used internally by eventsourcing package
 	SetBase(EventBase[T])

@@ -1,11 +1,13 @@
 package auth
 
 import (
+	"crypto/sha1"
 	"encoding/base64"
 	"strings"
 
 	"github.com/davidterranova/contacts/pkg/user"
 	"github.com/google/uuid"
+	"github.com/rs/zerolog/log"
 )
 
 func GrantAnyAccess() func(authToken string) (user.User, error) {
@@ -15,8 +17,9 @@ func GrantAnyAccess() func(authToken string) (user.User, error) {
 			return user.Unauthenticated, ErrUnauthorized
 		}
 
-		id := uuid.NewSHA1(uuid.NameSpaceOID, []byte(reqUsername))
-		return user.New(id), nil
+		id, err := uuid.FromBytes(sha1.New().Sum([]byte(reqUsername))[:16])
+		log.Info().Str("username", reqUsername).Str("id", id.String()).Msg("granting access")
+		return user.New(id), err
 	}
 }
 
