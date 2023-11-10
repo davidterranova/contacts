@@ -44,4 +44,10 @@ func mountPublic(root *mux.Router) {
 			http.FileServer(http.Dir("docs/openapi")),
 		),
 	)
+	root.PathPrefix("/").Handler(
+		http.StripPrefix(
+			"/",
+			http.FileServer(http.Dir("web")),
+		),
+	)
 }
