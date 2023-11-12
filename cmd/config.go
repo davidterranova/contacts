@@ -12,11 +12,11 @@ import (
 )
 
 type Config struct {
-	Log  xlogs.LoggerConfig `envconfig:"LOG"`
-	HTTP xhttp.HTTPConfig   `envconfig:"HTTP"`
-	GQL  xhttp.HTTPConfig   `envconfig:"GQL"`
-	GRPC xhttp.HTTPConfig   `envconfig:"GRPC"`
-	DB   pg.DBConfig        `envconfig:"DB"`
+	Log          xlogs.LoggerConfig `envconfig:"LOG"`
+	HTTP         xhttp.HTTPConfig   `envconfig:"HTTP"`
+	GQL          xhttp.HTTPConfig   `envconfig:"GQL"`
+	GRPC         xhttp.HTTPConfig   `envconfig:"GRPC"`
+	EventStoreDB pg.DBConfig        `envconfig:"EVENT_STORE_DB"`
 }
 
 var cfg Config
@@ -56,8 +56,6 @@ func initConfig(cmd *cobra.Command, args []string) {
 		xlogs.WithLevel(cfg.Log.LogLevel),
 		xlogs.WithHostname(cfg.Log.Host),
 	)
-
-	log.Info().Interface("config", cfg).Msg("configuration loaded")
 }
 
 func init() {

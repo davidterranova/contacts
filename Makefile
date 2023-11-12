@@ -65,8 +65,8 @@ gen-migration:
 
 .PHONY: migrate-up
 migrate-up:
-	migrate -path pkg/pg/migrations -database "$(MIGRATE_DB_CONN_STRING)&sslmode=disable" -verbose up
+	go run main.go dbmigrate up --target eventstore
 
 .PHONY: migrate-down
 migrate-down:
-	migrate -path pkg/pg/migrations -database "$(MIGRATE_DB_CONN_STRING)&sslmode=disable" -verbose down
+	go run main.go dbmigrate down --target eventstore

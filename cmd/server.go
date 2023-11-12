@@ -39,7 +39,7 @@ func runServer(cmd *cobra.Command, args []string) {
 
 	eventStream := eventsourcing.NewInMemoryPublisher[domain.Contact](context.Background(), 100)
 
-	contactWriteModel, err := writeModel(ctx, cfg.DB, eventStream)
+	contactWriteModel, err := writeModel(ctx, cfg.EventStoreDB, eventStream)
 	if err != nil {
 		log.Ctx(ctx).Panic().Err(err).Msg("failed to create write model")
 	}
