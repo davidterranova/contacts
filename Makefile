@@ -58,3 +58,15 @@ compose-up:
 .PHONY: compose-down
 compose-down:
 	docker-compose down
+
+.PHONY: gen-migration
+gen-migration:
+	migrate create -ext sql -dir pkg/pg/migrations -seq $(name)
+
+.PHONY: migrate-up
+migrate-up:
+	migrate -path pkg/pg/migrations -database "$(MIGRATE_DB_CONN_STRING)&sslmode=disable" -verbose up
+
+.PHONY: migrate-down
+migrate-down:
+	migrate -path pkg/pg/migrations -database "$(MIGRATE_DB_CONN_STRING)&sslmode=disable" -verbose down

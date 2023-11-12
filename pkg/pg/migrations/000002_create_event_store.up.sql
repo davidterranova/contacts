@@ -1,4 +1,3 @@
-CREATE SCHEMA IF NOT EXISTS event_store;
 SET SCHEMA 'event_store';
 
 CREATE TABLE IF NOT EXISTS events (

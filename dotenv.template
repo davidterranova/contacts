@@ -23,12 +23,7 @@ POSTGRES_USER=postgres
 POSTGRES_PASSWORD=password
 POSTGRES_DB=contacts
 
-# FLYWAY
-FLYWAY_DB_DATABASE=contacts
-FLYWAY_DEFAULT_SCHEMA=event_store
-FLYWAY_DB_USERNAME=postgres
-FLYWAY_DB_PASSWORD=password
-FLYWAY_DB_HOST=db
-FLYWAY_DB_PORT=5432
-FLYWAY_DB_PARAMS="sslmode=disable"
+# Golang-migrate
+MIGRATE_DB_CONN_STRING=postgres://postgres:password@localhost:5432/contacts?search_path=public&sslmode=disable
+
 

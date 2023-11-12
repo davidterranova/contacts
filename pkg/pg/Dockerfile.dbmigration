@@ -1,7 +1,0 @@
-FROM flyway/flyway:10
-# USER 0
-ADD migrations /migrations
-ADD migrate.sh /migrate.sh
-RUN chmod +x /migrate.sh
-# USER flyway
-ENTRYPOINT []
