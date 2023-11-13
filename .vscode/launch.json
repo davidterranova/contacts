@@ -5,12 +5,13 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Launch Package",
+      "name": "Launch server",
       "type": "go",
       "request": "launch",
       "mode": "auto",
       "program": "main.go",
-      "args": ["server"]
+      "args": ["server"],
+      "envFile": "${workspaceFolder}/.env",
     }
   ]
 }

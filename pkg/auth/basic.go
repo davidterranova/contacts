@@ -18,7 +18,7 @@ func GrantAnyAccess() func(authToken string) (user.User, error) {
 		}
 
 		id, err := uuid.FromBytes(sha1.New().Sum([]byte(reqUsername))[:16])
-		log.Info().Str("username", reqUsername).Str("id", id.String()).Msg("granting access")
+		log.Debug().Str("username", reqUsername).Str("id", id.String()).Msg("granting access")
 		return user.New(id), err
 	}
 }
