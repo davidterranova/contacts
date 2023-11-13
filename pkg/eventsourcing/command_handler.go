@@ -11,10 +11,10 @@ type CommandHandler[T Aggregate] interface {
 	Handle(Command[T]) (*T, error)
 
 	// HydrateAggregate an aggregate from already published events (internal)
-	// HydrateAggregate(aggregateType AggregateType, aggregateId uuid.UUID) (T, error)
+	HydrateAggregate(aggregateType AggregateType, aggregateId uuid.UUID) (*T, error)
 
 	// Apply checks command validity for an aggregate and return newly emitted events (internal)
-	// Apply(aggregate T, command Command[T]) (T, []Event[T], error)
+	ApplyCommand(aggregate *T, command Command[T]) (*T, []Event[T], error)
 }
 
 type AggregateFactory[T Aggregate] func() *T
@@ -41,7 +41,7 @@ func (h *commandHandler[T]) Handle(c Command[T]) (*T, error) {
 	}
 
 	// check command validity for aggregate
-	aggregate, events, err := h.Apply(aggregate, c)
+	aggregate, events, err := h.ApplyCommand(aggregate, c)
 	if err != nil {
 		return new(T), fmt.Errorf("command (%T) rejected on aggregate(%s#%s): %w", c, c.AggregateType(), c.AggregateId(), err)
 	}
@@ -77,7 +77,7 @@ func (h *commandHandler[T]) HydrateAggregate(aggregateType AggregateType, aggreg
 	return aggregate, nil
 }
 
-func (h *commandHandler[T]) Apply(aggregate *T, c Command[T]) (*T, []Event[T], error) {
+func (h *commandHandler[T]) ApplyCommand(aggregate *T, c Command[T]) (*T, []Event[T], error) {
 	agg := *aggregate
 	// check if command is valid for aggregate
 	events, err := c.Apply(aggregate)
