@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"errors"
+
 	"github.com/davidterranova/contacts/pkg/pg"
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
@@ -38,6 +40,10 @@ func runDBMigrateUp(cmd *cobra.Command, args []string) {
 
 	err := migrator.Up()
 	if err != nil {
+		if errors.Is(err, migrate.ErrNoChange) {
+			log.Info().Msg("no changes to migrate")
+			return
+		}
 		log.Fatal().Err(err).Msg("failed to migrate up")
 	}
 }
