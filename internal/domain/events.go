@@ -15,6 +15,14 @@ const (
 	ContactDeleted      = "deleted"
 )
 
+func RegisterEvents(registry *eventsourcing.Registry[Contact]) {
+	registry.Register(ContactCreated, func() eventsourcing.Event[Contact] { return &EvtContactCreated{} })
+	registry.Register(ContactEmailUpdated, func() eventsourcing.Event[Contact] { return &EvtContactEmailUpdated{} })
+	registry.Register(ContactNameUpdated, func() eventsourcing.Event[Contact] { return &EvtContactNameUpdated{} })
+	registry.Register(ContactPhoneUpdated, func() eventsourcing.Event[Contact] { return &EvtContactPhoneUpdated{} })
+	registry.Register(ContactDeleted, func() eventsourcing.Event[Contact] { return &EvtContactDeleted{} })
+}
+
 type EvtContactCreated struct {
 	eventsourcing.EventBase[Contact]
 }

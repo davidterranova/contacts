@@ -11,3 +11,6 @@ CREATE TABLE IF NOT EXISTS events (
 
   event_data JSONB
 );
+
+CREATE INDEX IF NOT EXISTS events_aggregate_id_idx ON events (aggregate_id);
+CREATE INDEX IF NOT EXISTS events_aggregate_type_idx ON events (aggregate_type);

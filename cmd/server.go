@@ -37,9 +37,11 @@ func runServer(cmd *cobra.Command, args []string) {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer cancel()
 
-	eventStream := eventsourcing.NewInMemoryPublisher[domain.Contact](context.Background(), 100)
+	eventRegistry := eventsourcing.NewRegistry[domain.Contact]()
+	domain.RegisterEvents(eventRegistry)
 
-	contactWriteModel, eventStreamPublisher, err := writeModel(ctx, cfg.EventStoreDB, eventStream)
+	eventStream := eventsourcing.NewInMemoryPublisher[domain.Contact](context.Background(), 100)
+	contactWriteModel, eventStreamPublisher, err := writeModel(ctx, cfg.EventStoreDB, eventRegistry, eventStream)
 	if err != nil {
 		log.Ctx(ctx).Panic().Err(err).Msg("failed to create write model")
 	}
@@ -106,16 +108,16 @@ func grpcServer(ctx context.Context, app *internal.App) {
 	}
 }
 
-func writeModel(ctx context.Context, cfg pg.DBConfig, eventStream eventsourcing.EventStream[domain.Contact]) (eventsourcing.CommandHandler[domain.Contact], *eventsourcing.EventStreamPublisher[domain.Contact], error) {
-	eventStore := eventsourcing.NewInMemoryEventStore[domain.Contact]()
-	// pg, err := pg.Open(pg.DBConfig{
-	// 	Name:       "postgres",
-	// 	ConnString: cfg.ConnString,
-	// })
-	// if err != nil {
-	// 	return nil, nil, err
-	// }
-	// eventStore := eventsourcing.NewPGEventStore[domain.Contact](pg, eventsourcing.NewRegistry[domain.Contact]())
+func writeModel(ctx context.Context, cfg pg.DBConfig, eventRegistry *eventsourcing.Registry[domain.Contact], eventStream eventsourcing.EventStream[domain.Contact]) (eventsourcing.CommandHandler[domain.Contact], *eventsourcing.EventStreamPublisher[domain.Contact], error) {
+	// eventStore := eventsourcing.NewInMemoryEventStore[domain.Contact]()
+	pg, err := pg.Open(pg.DBConfig{
+		Name:       "postgres",
+		ConnString: cfg.ConnString,
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	eventStore := eventsourcing.NewPGEventStore[domain.Contact](pg, eventRegistry)
 	eventPublisher := eventsourcing.NewEventStreamPublisher[domain.Contact](eventStore, eventStream, 10)
 
 	contactWriteModel := eventsourcing.NewCommandHandler[domain.Contact](

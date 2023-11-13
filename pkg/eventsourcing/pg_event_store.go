@@ -8,6 +8,7 @@ import (
 
 	"github.com/davidterranova/contacts/pkg/user"
 	"github.com/google/uuid"
+	"github.com/rs/zerolog/log"
 	"gorm.io/gorm"
 )
 
@@ -31,6 +32,15 @@ func (pgEvent) TableName() string {
 	return "events"
 }
 
+type pgOutboxEntry struct {
+	EventId   uuid.UUID `gorm:"type:uuid;primaryKey;column:event_id"`
+	Published bool      `gorm:"column:published"`
+}
+
+func (pgOutboxEntry) TableName() string {
+	return "events_outbox"
+}
+
 func NewPGEventStore[T Aggregate](db *gorm.DB, registry *Registry[T]) *pgEventStore[T] {
 	return &pgEventStore[T]{
 		db:       db,
@@ -40,37 +50,80 @@ func NewPGEventStore[T Aggregate](db *gorm.DB, registry *Registry[T]) *pgEventSt
 
 func (s *pgEventStore[T]) Store(ctx context.Context, events ...Event[T]) error {
 	pgEvents := make([]*pgEvent, 0, len(events))
+	outboxEntries := make([]*pgOutboxEntry, 0, len(events))
+
 	for _, event := range events {
 		pgEvent, err := s.toPgEvent(event)
 		if err != nil {
 			return err
 		}
 		pgEvents = append(pgEvents, pgEvent)
+
+		outboxEntries = append(outboxEntries, &pgOutboxEntry{
+			EventId:   event.Id(),
+			Published: false,
+		})
 	}
 
 	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		return tx.Create(pgEvents).Error
+		err := tx.Create(pgEvents).Error
+		if err != nil {
+			return fmt.Errorf("failed to create events in event_store table: %w", err)
+		}
+
+		for _, event := range events {
+			log.Debug().Interface("event", event).Msg("stored event")
+		}
+
+		return tx.Create(outboxEntries).Error
 	})
 }
 
-func (s *pgEventStore[T]) Load(aggregateType AggregateType, aggregateId uuid.UUID) ([]Event[T], error) {
+func (s *pgEventStore[T]) Load(ctx context.Context, aggregateType AggregateType, aggregateId uuid.UUID) ([]Event[T], error) {
 	var pgEvents []pgEvent
-	err := s.db.Where("aggregate_type = ? AND aggregate_id = ?", aggregateType, aggregateId).Find(&pgEvents).Error
+	err := s.db.WithContext(ctx).Where("aggregate_type = ? AND aggregate_id = ?", aggregateType, aggregateId).Find(&pgEvents).Error
 	if err != nil {
 		return nil, err
 	}
 
-	events := make([]Event[T], 0, len(pgEvents))
-	for _, pgEvent := range pgEvents {
-		hydratedEvent, err := s.fromPgEvent(pgEvent)
-		if err != nil {
-			return nil, err
-		}
+	return s.fromPgEvenSlice(pgEvents)
+}
 
-		events = append(events, hydratedEvent)
+func (s *pgEventStore[T]) LoadUnpublished(ctx context.Context, batchSize int) ([]Event[T], error) {
+	var pgOutboxEntries []uuid.UUID
+	// err := s.db.WithContext(ctx).Where("published = ?", false).Limit(batchSize).Find(&pgOutboxEntries).Error
+	err := s.db.
+		WithContext(ctx).
+		Model(&pgOutboxEntry{}).
+		Where("published = ?", false).
+		Limit(batchSize).
+		Pluck("event_id", &pgOutboxEntries).
+		Error
+	if err != nil {
+		return nil, fmt.Errorf("failed to load unpublished events from outbox: %w", err)
 	}
 
-	return events, nil
+	var unpublishedEvents []pgEvent
+	err = s.db.WithContext(ctx).Where("event_id IN ?", pgOutboxEntries).Find(&unpublishedEvents).Error
+	if err != nil {
+		return nil, fmt.Errorf("failed to load unpublished events: %w", err)
+	}
+
+	for _, event := range unpublishedEvents {
+		log.Debug().Interface("event", event).Msg("loaded unpublished event")
+	}
+
+	return s.fromPgEvenSlice(unpublishedEvents)
+}
+
+func (s *pgEventStore[T]) MarkPublished(ctx context.Context, events ...Event[T]) error {
+	var eventIds []uuid.UUID
+	for _, event := range events {
+		eventIds = append(eventIds, event.Id())
+		log.Debug().Interface("event", event).Msg("marked event as published")
+	}
+
+	return s.db.WithContext(ctx).Model(&pgOutboxEntry{}).Where("event_id IN ?", eventIds).Update("published", true).Error
 }
 
 func (s *pgEventStore[T]) toPgEvent(e Event[T]) (*pgEvent, error) {
@@ -93,6 +146,20 @@ func (s *pgEventStore[T]) toPgEvent(e Event[T]) (*pgEvent, error) {
 		AggregateId:   e.AggregateId(),
 		AggregateType: e.AggregateType(),
 	}, nil
+}
+
+func (s *pgEventStore[T]) fromPgEvenSlice(pgEvents []pgEvent) ([]Event[T], error) {
+	events := make([]Event[T], 0, len(pgEvents))
+	for _, pgEvent := range pgEvents {
+		hydratedEvent, err := s.fromPgEvent(pgEvent)
+		if err != nil {
+			return nil, err
+		}
+
+		events = append(events, hydratedEvent)
+	}
+
+	return events, nil
 }
 
 func (s *pgEventStore[T]) fromPgEvent(pgEvent pgEvent) (Event[T], error) {
