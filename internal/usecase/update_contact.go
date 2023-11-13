@@ -73,6 +73,7 @@ func (c cmdUpdateContact) Apply(aggregate *domain.Contact) ([]eventsourcing.Even
 		return nil, ErrNotFound
 	}
 
+	aggregateVersion := aggregate.AggregateVersion()
 	events := make([]eventsourcing.Event[domain.Contact], 0)
 	if c.FirstName != "" || c.LastName != "" {
 		updateNames := false
@@ -89,15 +90,18 @@ func (c cmdUpdateContact) Apply(aggregate *domain.Contact) ([]eventsourcing.Even
 		}
 
 		if updateNames {
-			events = append(events, domain.NewEvtContactNameUpdated(c.AggregateId(), c.IssuedBy(), firstName, lastName))
+			aggregateVersion++
+			events = append(events, domain.NewEvtContactNameUpdated(c.AggregateId(), aggregateVersion, c.IssuedBy(), firstName, lastName))
 		}
 	}
 
 	if c.Email != "" && aggregate.Email != c.Email {
-		events = append(events, domain.NewEvtContactEmailUpdated(c.AggregateId(), c.IssuedBy(), c.Email))
+		aggregateVersion++
+		events = append(events, domain.NewEvtContactEmailUpdated(c.AggregateId(), aggregateVersion, c.IssuedBy(), c.Email))
 	}
 	if c.Phone != "" && aggregate.Phone != c.Phone {
-		events = append(events, domain.NewEvtContactPhoneUpdated(c.AggregateId(), c.IssuedBy(), c.Phone))
+		aggregateVersion++
+		events = append(events, domain.NewEvtContactPhoneUpdated(c.AggregateId(), aggregateVersion, c.IssuedBy(), c.Phone))
 	}
 
 	return events, nil

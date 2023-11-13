@@ -42,7 +42,7 @@ func NewInMemoryPublisher[T Aggregate](ctx context.Context, buffer int) *eventSt
 
 func (p *eventStream[T]) Publish(ctx context.Context, events ...Event[T]) error {
 	for _, event := range events {
-		log.Ctx(ctx).Debug().Interface("event", event).Msg("publishing event")
+		log.Ctx(ctx).Debug().Str("type", event.EventType()).Interface("event", event).Msg("publishing event")
 		p.stream <- event
 	}
 

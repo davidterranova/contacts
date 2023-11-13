@@ -22,39 +22,54 @@ func NewEventStreamPublisher[T Aggregate](eventStore EventStore[T], stream Publi
 }
 
 func (p *EventStreamPublisher[T]) Run(ctx context.Context) {
+	var (
+		nb  int
+		err error
+	)
+
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		default:
-			err := p.processBatch(ctx)
+			nb, err = p.processBatch(ctx)
 			if err != nil {
 				log.Ctx(ctx).Error().Err(err).Msg("event stream publisher: failed to process batch")
 			}
 		}
-		time.Sleep(30 * time.Second)
+
+		var sleepTime time.Duration
+		switch nb {
+		case -1:
+			sleepTime = 1 * time.Second
+		case 0:
+			sleepTime = 1 * time.Second
+		default:
+			sleepTime = 10 * time.Millisecond
+		}
+		time.Sleep(sleepTime)
 	}
 }
 
-func (p *EventStreamPublisher[T]) processBatch(ctx context.Context) error {
+func (p *EventStreamPublisher[T]) processBatch(ctx context.Context) (int, error) {
 	events, err := p.eventStore.LoadUnpublished(ctx, p.batchSize)
 	if err != nil {
-		return err
+		return -1, err
 	}
 
 	if len(events) == 0 {
-		return nil
+		return 0, nil
 	}
 
 	err = p.stream.Publish(ctx, events...)
 	if err != nil {
-		return err
+		return -1, err
 	}
 
 	err = p.eventStore.MarkPublished(ctx, events...)
 	if err != nil {
-		return err
+		return -1, err
 	}
 
-	return nil
+	return len(events), nil
 }

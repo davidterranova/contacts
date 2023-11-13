@@ -123,7 +123,9 @@ func writeModel(ctx context.Context, cfg pg.DBConfig, eventRegistry *eventsourci
 	contactWriteModel := eventsourcing.NewCommandHandler[domain.Contact](
 		eventStore,
 		func() *domain.Contact {
-			return &domain.Contact{}
+			return &domain.Contact{
+				AggregateBase: &eventsourcing.AggregateBase{},
+			}
 		},
 	)
 

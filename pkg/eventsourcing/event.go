@@ -20,25 +20,28 @@ type Event[T Aggregate] interface {
 
 	// SetBase(EventBase[T]) is used internally by eventsourcing package
 	SetBase(EventBase[T])
+	AggregateVersion() int
 }
 
 type EventBase[T Aggregate] struct {
-	eventId       uuid.UUID
-	eventIssuesAt time.Time
-	eventIssuedBy user.User
-	eventType     string
-	aggregateType AggregateType
-	aggregateId   uuid.UUID
+	eventId          uuid.UUID
+	eventIssuesAt    time.Time
+	eventIssuedBy    user.User
+	eventType        string
+	aggregateType    AggregateType
+	aggregateId      uuid.UUID
+	aggregateVersion int
 }
 
-func NewEventBase[T Aggregate](aggregateType AggregateType, eventType string, aggregateId uuid.UUID, issuedBy user.User) EventBase[T] {
+func NewEventBase[T Aggregate](aggregateType AggregateType, aggregateVersion int, eventType string, aggregateId uuid.UUID, issuedBy user.User) EventBase[T] {
 	return EventBase[T]{
-		eventId:       uuid.New(),
-		eventIssuedBy: issuedBy,
-		eventIssuesAt: time.Now().UTC(),
-		eventType:     eventType,
-		aggregateType: aggregateType,
-		aggregateId:   aggregateId,
+		eventId:          uuid.New(),
+		eventIssuedBy:    issuedBy,
+		eventIssuesAt:    time.Now().UTC(),
+		eventType:        eventType,
+		aggregateType:    aggregateType,
+		aggregateId:      aggregateId,
+		aggregateVersion: aggregateVersion,
 	}
 }
 
@@ -64,6 +67,10 @@ func (e EventBase[T]) IssuedBy() user.User {
 
 func (e EventBase[T]) EventType() string {
 	return e.eventType
+}
+
+func (e EventBase[T]) AggregateVersion() int {
+	return e.aggregateVersion
 }
 
 func (e *EventBase[T]) SetBase(base EventBase[T]) {

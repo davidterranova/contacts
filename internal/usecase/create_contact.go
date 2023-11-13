@@ -61,10 +61,11 @@ func (c cmdCreateContact) Apply(aggregate *domain.Contact) ([]eventsourcing.Even
 		return nil, eventsourcing.ErrAggregateAlreadyExists
 	}
 
+	v := aggregate.AggregateVersion()
 	return []eventsourcing.Event[domain.Contact]{
-		domain.NewEvtContactCreated(c.AggregateId(), c.IssuedBy()),
-		domain.NewEvtContactEmailUpdated(c.AggregateId(), c.IssuedBy(), c.Email),
-		domain.NewEvtContactNameUpdated(c.AggregateId(), c.IssuedBy(), c.FirstName, c.LastName),
-		domain.NewEvtContactPhoneUpdated(c.AggregateId(), c.IssuedBy(), c.Phone),
+		domain.NewEvtContactCreated(c.AggregateId(), v+1, c.IssuedBy()),
+		domain.NewEvtContactEmailUpdated(c.AggregateId(), v+2, c.IssuedBy(), c.Email),
+		domain.NewEvtContactNameUpdated(c.AggregateId(), v+3, c.IssuedBy(), c.FirstName, c.LastName),
+		domain.NewEvtContactPhoneUpdated(c.AggregateId(), v+4, c.IssuedBy(), c.Phone),
 	}, nil
 }

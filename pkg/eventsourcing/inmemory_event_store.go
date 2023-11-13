@@ -43,7 +43,7 @@ func (s *eventStore[T]) Store(_ context.Context, events ...Event[T]) error {
 		s.unPublishedEvents = append(s.unPublishedEvents, event)
 
 		s.aggregateEvents[event.AggregateId()] = localEvents
-		log.Debug().Interface("event", event).Msg("stored event")
+		log.Debug().Str("type", event.EventType()).Interface("event", event).Msg("stored event")
 	}
 	return nil
 }
@@ -64,7 +64,7 @@ func (s *eventStore[T]) LoadUnpublished(_ context.Context, batchSize int) ([]Eve
 	events := make([]Event[T], 0, batchSize)
 	added := 0
 	for _, unPublished := range s.unPublishedEvents {
-		log.Debug().Interface("event", unPublished).Msg("loaded unpublished event")
+		log.Debug().Str("type", unPublished.EventType()).Interface("event", unPublished).Msg("loaded unpublished event")
 		events = append(events, unPublished)
 		added++
 		if added >= batchSize {
@@ -79,7 +79,7 @@ func (s *eventStore[T]) MarkPublished(_ context.Context, events ...Event[T]) err
 	for _, event := range events {
 		for i, unPublished := range s.unPublishedEvents {
 			if unPublished.Id() == event.Id() {
-				log.Debug().Interface("event", event).Msg("marked event as published")
+				log.Debug().Str("type", event.EventType()).Interface("event", event).Msg("marked event as published")
 				s.unPublishedEvents = append(s.unPublishedEvents[:i], s.unPublishedEvents[i+1:]...)
 				break
 			}

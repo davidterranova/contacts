@@ -24,8 +24,9 @@ type pgEvent struct {
 	EventIssuedBy string          `gorm:"type:varchar(255);column:event_issued_by"`
 	EventData     json.RawMessage `gorm:"type:jsonb;column:event_data"`
 
-	AggregateId   uuid.UUID     `gorm:"type:uuid;column:aggregate_id"`
-	AggregateType AggregateType `gorm:"type:varchar(255);column:aggregate_type"`
+	AggregateId      uuid.UUID     `gorm:"type:uuid;column:aggregate_id"`
+	AggregateType    AggregateType `gorm:"type:varchar(255);column:aggregate_type"`
+	AggregateVersion int           `gorm:"column:aggregate_version"`
 }
 
 func (pgEvent) TableName() string {
@@ -33,8 +34,9 @@ func (pgEvent) TableName() string {
 }
 
 type pgOutboxEntry struct {
-	EventId   uuid.UUID `gorm:"type:uuid;primaryKey;column:event_id"`
-	Published bool      `gorm:"column:published"`
+	EventId          uuid.UUID `gorm:"type:uuid;primaryKey;column:event_id"`
+	Published        bool      `gorm:"column:published"`
+	AggregateVersion int       `gorm:"column:aggregate_version"`
 }
 
 func (pgOutboxEntry) TableName() string {
@@ -60,8 +62,9 @@ func (s *pgEventStore[T]) Store(ctx context.Context, events ...Event[T]) error {
 		pgEvents = append(pgEvents, pgEvent)
 
 		outboxEntries = append(outboxEntries, &pgOutboxEntry{
-			EventId:   event.Id(),
-			Published: false,
+			EventId:          event.Id(),
+			Published:        false,
+			AggregateVersion: event.AggregateVersion(),
 		})
 	}
 
@@ -72,7 +75,7 @@ func (s *pgEventStore[T]) Store(ctx context.Context, events ...Event[T]) error {
 		}
 
 		for _, event := range events {
-			log.Debug().Interface("event", event).Msg("stored event")
+			log.Debug().Str("type", event.EventType()).Interface("event", event).Msg("stored event")
 		}
 
 		return tx.Create(outboxEntries).Error
@@ -96,6 +99,8 @@ func (s *pgEventStore[T]) LoadUnpublished(ctx context.Context, batchSize int) ([
 		WithContext(ctx).
 		Model(&pgOutboxEntry{}).
 		Where("published = ?", false).
+		Group("event_id").
+		Order("aggregate_version ASC").
 		Limit(batchSize).
 		Pluck("event_id", &pgOutboxEntries).
 		Error
@@ -110,7 +115,7 @@ func (s *pgEventStore[T]) LoadUnpublished(ctx context.Context, batchSize int) ([
 	}
 
 	for _, event := range unpublishedEvents {
-		log.Debug().Interface("event", event).Msg("loaded unpublished event")
+		log.Debug().Str("type", event.EventType).Interface("event", event).Msg("loaded unpublished event")
 	}
 
 	return s.fromPgEvenSlice(unpublishedEvents)
@@ -120,7 +125,7 @@ func (s *pgEventStore[T]) MarkPublished(ctx context.Context, events ...Event[T])
 	var eventIds []uuid.UUID
 	for _, event := range events {
 		eventIds = append(eventIds, event.Id())
-		log.Debug().Interface("event", event).Msg("marked event as published")
+		log.Debug().Str("type", event.EventType()).Interface("event", event).Msg("marked event as published")
 	}
 
 	return s.db.WithContext(ctx).Model(&pgOutboxEntry{}).Where("event_id IN ?", eventIds).Update("published", true).Error
@@ -138,13 +143,14 @@ func (s *pgEventStore[T]) toPgEvent(e Event[T]) (*pgEvent, error) {
 	}
 
 	return &pgEvent{
-		EventId:       e.Id(),
-		EventType:     e.EventType(),
-		EventIssuedAt: e.IssuedAt(),
-		EventIssuedBy: string(byteUser),
-		EventData:     data,
-		AggregateId:   e.AggregateId(),
-		AggregateType: e.AggregateType(),
+		EventId:          e.Id(),
+		EventType:        e.EventType(),
+		EventIssuedAt:    e.IssuedAt(),
+		EventIssuedBy:    string(byteUser),
+		EventData:        data,
+		AggregateId:      e.AggregateId(),
+		AggregateType:    e.AggregateType(),
+		AggregateVersion: e.AggregateVersion(),
 	}, nil
 }
 

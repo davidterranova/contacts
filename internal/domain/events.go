@@ -27,13 +27,21 @@ type EvtContactCreated struct {
 	eventsourcing.EventBase[Contact]
 }
 
-func NewEvtContactCreated(aggregateId uuid.UUID, createdBy user.User) *EvtContactCreated {
+func NewEvtContactCreated(aggregateId uuid.UUID, aggregateVersion int, createdBy user.User) *EvtContactCreated {
 	return &EvtContactCreated{
-		EventBase: eventsourcing.NewEventBase[Contact](AggregateContact, ContactCreated, aggregateId, createdBy),
+		EventBase: eventsourcing.NewEventBase[Contact](
+			AggregateContact,
+			aggregateVersion,
+			ContactCreated,
+			aggregateId,
+			createdBy,
+		),
 	}
 }
 
 func (e EvtContactCreated) Apply(contact *Contact) error {
+	contact.IncrementVersion()
+
 	contact.Id = e.AggregateId()
 	contact.CreatedAt = e.IssuedAt()
 	contact.UpdatedAt = e.IssuedAt()
@@ -48,14 +56,22 @@ type EvtContactEmailUpdated struct {
 	Email string `json:"email"`
 }
 
-func NewEvtContactEmailUpdated(aggregateId uuid.UUID, updatedBy user.User, email string) *EvtContactEmailUpdated {
+func NewEvtContactEmailUpdated(aggregateId uuid.UUID, aggregateVersion int, updatedBy user.User, email string) *EvtContactEmailUpdated {
 	return &EvtContactEmailUpdated{
-		EventBase: eventsourcing.NewEventBase[Contact](AggregateContact, ContactEmailUpdated, aggregateId, updatedBy),
-		Email:     email,
+		EventBase: eventsourcing.NewEventBase[Contact](
+			AggregateContact,
+			aggregateVersion,
+			ContactEmailUpdated,
+			aggregateId,
+			updatedBy,
+		),
+		Email: email,
 	}
 }
 
 func (e EvtContactEmailUpdated) Apply(contact *Contact) error {
+	contact.IncrementVersion()
+
 	contact.UpdatedAt = e.IssuedAt()
 	contact.Email = e.Email
 
@@ -69,15 +85,23 @@ type EvtContactNameUpdated struct {
 	LastName  string `json:"last_name"`
 }
 
-func NewEvtContactNameUpdated(aggregateId uuid.UUID, updatedBy user.User, firstName string, lastName string) *EvtContactNameUpdated {
+func NewEvtContactNameUpdated(aggregateId uuid.UUID, aggregateVersion int, updatedBy user.User, firstName string, lastName string) *EvtContactNameUpdated {
 	return &EvtContactNameUpdated{
-		EventBase: eventsourcing.NewEventBase[Contact](AggregateContact, ContactNameUpdated, aggregateId, updatedBy),
+		EventBase: eventsourcing.NewEventBase[Contact](
+			AggregateContact,
+			aggregateVersion,
+			ContactNameUpdated,
+			aggregateId,
+			updatedBy,
+		),
 		FirstName: firstName,
 		LastName:  lastName,
 	}
 }
 
 func (e EvtContactNameUpdated) Apply(contact *Contact) error {
+	contact.IncrementVersion()
+
 	contact.UpdatedAt = e.IssuedAt()
 	contact.FirstName = e.FirstName
 	contact.LastName = e.LastName
@@ -91,14 +115,22 @@ type EvtContactPhoneUpdated struct {
 	Phone string `json:"phone"`
 }
 
-func NewEvtContactPhoneUpdated(aggregateId uuid.UUID, updatedBy user.User, phone string) *EvtContactPhoneUpdated {
+func NewEvtContactPhoneUpdated(aggregateId uuid.UUID, aggregateVersion int, updatedBy user.User, phone string) *EvtContactPhoneUpdated {
 	return &EvtContactPhoneUpdated{
-		EventBase: eventsourcing.NewEventBase[Contact](AggregateContact, ContactPhoneUpdated, aggregateId, updatedBy),
-		Phone:     phone,
+		EventBase: eventsourcing.NewEventBase[Contact](
+			AggregateContact,
+			aggregateVersion,
+			ContactPhoneUpdated,
+			aggregateId,
+			updatedBy,
+		),
+		Phone: phone,
 	}
 }
 
 func (e EvtContactPhoneUpdated) Apply(contact *Contact) error {
+	contact.IncrementVersion()
+
 	contact.UpdatedAt = e.IssuedAt()
 	contact.Phone = e.Phone
 
@@ -109,13 +141,21 @@ type EvtContactDeleted struct {
 	eventsourcing.EventBase[Contact]
 }
 
-func NewEvtContactDeleted(aggregateId uuid.UUID, deletedBy user.User) *EvtContactDeleted {
+func NewEvtContactDeleted(aggregateId uuid.UUID, aggregateVersion int, deletedBy user.User) *EvtContactDeleted {
 	return &EvtContactDeleted{
-		EventBase: eventsourcing.NewEventBase[Contact](AggregateContact, ContactDeleted, aggregateId, deletedBy),
+		EventBase: eventsourcing.NewEventBase[Contact](
+			AggregateContact,
+			aggregateVersion,
+			ContactDeleted,
+			aggregateId,
+			deletedBy,
+		),
 	}
 }
 
 func (e EvtContactDeleted) Apply(contact *Contact) error {
+	contact.IncrementVersion()
+
 	deletedAt := e.IssuedAt()
 	contact.DeletedAt = &deletedAt
 
