@@ -21,16 +21,14 @@ type CommandHandler[T Aggregate] interface {
 type AggregateFactory[T Aggregate] func() *T
 
 type commandHandler[T Aggregate] struct {
-	eventStore     EventStore[T]
-	factory        AggregateFactory[T]
-	eventPublisher Publisher[T]
+	eventStore EventStore[T]
+	factory    AggregateFactory[T]
 }
 
-func NewCommandHandler[T Aggregate](eventStore EventStore[T], eventPublisher Publisher[T], factory AggregateFactory[T]) *commandHandler[T] {
+func NewCommandHandler[T Aggregate](eventStore EventStore[T], factory AggregateFactory[T]) *commandHandler[T] {
 	return &commandHandler[T]{
-		eventStore:     eventStore,
-		eventPublisher: eventPublisher,
-		factory:        factory,
+		eventStore: eventStore,
+		factory:    factory,
 	}
 }
 
@@ -48,7 +46,7 @@ func (h *commandHandler[T]) Handle(ctx context.Context, c Command[T]) (*T, error
 	}
 
 	// persist and publish events
-	err = h.PersistAndPublish(ctx, events...)
+	err = h.Persist(ctx, events...)
 	if err != nil {
 		return new(T), fmt.Errorf("failed to persist and publish events for aggregate(%s#%s): %w", c.AggregateType(), c.AggregateId(), err)
 	}
@@ -58,7 +56,7 @@ func (h *commandHandler[T]) Handle(ctx context.Context, c Command[T]) (*T, error
 }
 
 func (h *commandHandler[T]) HydrateAggregate(ctx context.Context, aggregateType AggregateType, aggregateId uuid.UUID) (*T, error) {
-	events, err := h.eventStore.Load(aggregateType, aggregateId)
+	events, err := h.eventStore.Load(ctx, aggregateType, aggregateId)
 	if err != nil {
 		return new(T), fmt.Errorf("failed to load events for aggregate(%s#%s): %w", aggregateType, aggregateId, err)
 	}
@@ -97,17 +95,10 @@ func (h *commandHandler[T]) ApplyCommand(ctx context.Context, aggregate *T, c Co
 	return aggregate, events, nil
 }
 
-// TODO: make it transactional
-func (h *commandHandler[T]) PersistAndPublish(ctx context.Context, events ...Event[T]) error {
+func (h *commandHandler[T]) Persist(ctx context.Context, events ...Event[T]) error {
 	err := h.eventStore.Store(ctx, events...)
 	if err != nil {
 		return fmt.Errorf("failed to store events: %w", err)
-	}
-
-	// publish events
-	err = h.eventPublisher.Publish(events...)
-	if err != nil {
-		return fmt.Errorf("failed to publish events: %w", err)
 	}
 
 	return nil

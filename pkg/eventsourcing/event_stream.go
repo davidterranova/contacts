@@ -11,13 +11,13 @@ type EventStream[T Aggregate] interface {
 }
 
 type Publisher[T Aggregate] interface {
-	Publish(events ...Event[T]) error
+	Publish(ctx context.Context, events ...Event[T]) error
 }
 
 type SubscribeFn[T Aggregate] func(e Event[T])
 
 type Subscriber[T Aggregate] interface {
-	Subscribe(sub SubscribeFn[T])
+	Subscribe(ctx context.Context, sub SubscribeFn[T])
 }
 
 type eventStream[T Aggregate] struct {
@@ -38,7 +38,7 @@ func NewInMemoryPublisher[T Aggregate](ctx context.Context, buffer int) *eventSt
 	return p
 }
 
-func (p *eventStream[T]) Publish(events ...Event[T]) error {
+func (p *eventStream[T]) Publish(ctx context.Context, events ...Event[T]) error {
 	for _, event := range events {
 		p.stream <- event
 	}
@@ -64,7 +64,7 @@ func (p *eventStream[T]) Run() {
 	}()
 }
 
-func (p *eventStream[T]) Subscribe(sub SubscribeFn[T]) {
+func (p *eventStream[T]) Subscribe(ctx context.Context, sub SubscribeFn[T]) {
 	p.mtx.Lock()
 	p.subscribers = append(p.subscribers, sub)
 	p.mtx.Unlock()

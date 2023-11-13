@@ -39,10 +39,13 @@ func runServer(cmd *cobra.Command, args []string) {
 
 	eventStream := eventsourcing.NewInMemoryPublisher[domain.Contact](context.Background(), 100)
 
-	contactWriteModel, err := writeModel(ctx, cfg.EventStoreDB, eventStream)
+	contactWriteModel, eventStreamPublisher, err := writeModel(ctx, cfg.EventStoreDB, eventStream)
 	if err != nil {
 		log.Ctx(ctx).Panic().Err(err).Msg("failed to create write model")
 	}
+
+	// start publishing events
+	go eventStreamPublisher.Run(ctx)
 
 	contactReadModel := ports.NewInMemoryContactList(eventStream)
 	app := internal.New(contactWriteModel, contactReadModel)
@@ -103,26 +106,26 @@ func grpcServer(ctx context.Context, app *internal.App) {
 	}
 }
 
-func writeModel(ctx context.Context, cfg pg.DBConfig, eventStream eventsourcing.EventStream[domain.Contact]) (eventsourcing.CommandHandler[domain.Contact], error) {
-	// eventStore := eventsourcing.NewInMemoryEventStore[domain.Contact]()
-	pg, err := pg.Open(pg.DBConfig{
-		Name:       "postgres",
-		ConnString: cfg.ConnString,
-		// ConnString: "postgres://postgres:password@127.0.0.1:5432/contacts?sslmode=disable&search_path=event_store",
-	})
-	if err != nil {
-		return nil, err
-	}
-	eventStore := eventsourcing.NewPGEventStore[domain.Contact](pg, eventsourcing.NewRegistry[domain.Contact]())
+func writeModel(ctx context.Context, cfg pg.DBConfig, eventStream eventsourcing.EventStream[domain.Contact]) (eventsourcing.CommandHandler[domain.Contact], *eventsourcing.EventStreamPublisher[domain.Contact], error) {
+	eventStore := eventsourcing.NewInMemoryEventStore[domain.Contact]()
+	// pg, err := pg.Open(pg.DBConfig{
+	// 	Name:       "postgres",
+	// 	ConnString: cfg.ConnString,
+	// })
+	// if err != nil {
+	// 	return nil, nil, err
+	// }
+	// eventStore := eventsourcing.NewPGEventStore[domain.Contact](pg, eventsourcing.NewRegistry[domain.Contact]())
+	eventPublisher := eventsourcing.NewEventStreamPublisher[domain.Contact](eventStore, eventStream, 10)
+
 	contactWriteModel := eventsourcing.NewCommandHandler[domain.Contact](
 		eventStore,
-		eventStream,
 		func() *domain.Contact {
 			return &domain.Contact{}
 		},
 	)
 
-	return contactWriteModel, nil
+	return contactWriteModel, eventPublisher, nil
 }
 
 func init() {

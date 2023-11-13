@@ -21,7 +21,7 @@ func NewInMemoryContactList(eventStream eventsourcing.Subscriber[domain.Contact]
 	l := &InMemoryContactList{
 		contacts: map[uuid.UUID]*domain.Contact{},
 	}
-	eventStream.Subscribe(l.HandleEvent)
+	eventStream.Subscribe(context.Background(), l.HandleEvent)
 
 	return l
 }
