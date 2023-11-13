@@ -75,14 +75,22 @@ func (c cmdUpdateContact) Apply(aggregate *domain.Contact) ([]eventsourcing.Even
 
 	events := make([]eventsourcing.Event[domain.Contact], 0)
 	if c.FirstName != "" || c.LastName != "" {
+		updateNames := false
+		firstName := aggregate.FirstName
+		lastName := aggregate.LastName
+
 		if c.FirstName != "" && c.FirstName != aggregate.FirstName {
-			aggregate.FirstName = c.FirstName
+			firstName = c.FirstName
+			updateNames = true
 		}
 		if c.LastName != "" && c.LastName != aggregate.LastName {
-			aggregate.LastName = c.LastName
+			lastName = c.LastName
+			updateNames = true
 		}
 
-		events = append(events, domain.NewEvtContactNameUpdated(c.AggregateId(), c.IssuedBy(), aggregate.FirstName, aggregate.LastName))
+		if updateNames {
+			events = append(events, domain.NewEvtContactNameUpdated(c.AggregateId(), c.IssuedBy(), firstName, lastName))
+		}
 	}
 
 	if c.Email != "" && aggregate.Email != c.Email {
