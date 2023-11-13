@@ -2,11 +2,8 @@ package eventsourcing
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 )
-
-var ErrUnknownEventType = errors.New("unknown event type")
 
 type Registry[T Aggregate] struct {
 	registry map[string]func() Event[T]
