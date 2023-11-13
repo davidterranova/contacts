@@ -37,7 +37,7 @@ func (h CreateContact) Create(ctx context.Context, cmd CmdCreateContact, cmdIssu
 	}
 
 	checkedCmd := newCmdCreateContact(cmd, cmdIssuedBy)
-	return handleErrs(h.commandHandler.Handle(checkedCmd))
+	return handleErrs(h.commandHandler.Handle(ctx, checkedCmd))
 }
 
 type cmdCreateContact struct {

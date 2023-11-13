@@ -81,7 +81,7 @@ func testCreateContactValidation(t *testing.T) {
 
 			if tc.expectedError == nil {
 				container.contactCmdHandler.EXPECT().
-					Handle(gomock.Any()).
+					Handle(ctx, gomock.Any()).
 					Times(1).
 					Return(nil, nil)
 			}
@@ -107,7 +107,7 @@ func testCreateContact(t *testing.T) {
 		}
 
 		container.contactCmdHandler.EXPECT().
-			Handle(gomock.Any()).
+			Handle(ctx, gomock.Any()).
 			Times(1).
 			Return(
 				&domain.Contact{
@@ -138,7 +138,7 @@ func testCreateContact(t *testing.T) {
 		}
 
 		container.contactCmdHandler.EXPECT().
-			Handle(gomock.Any()).
+			Handle(ctx, gomock.Any()).
 			Times(1).
 			Return(
 				nil,

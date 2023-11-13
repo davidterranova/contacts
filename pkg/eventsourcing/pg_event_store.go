@@ -1,6 +1,7 @@
 package eventsourcing
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"time"
@@ -37,7 +38,7 @@ func NewPGEventStore[T Aggregate](db *gorm.DB, registry *Registry[T]) *pgEventSt
 	}
 }
 
-func (s *pgEventStore[T]) Store(events ...Event[T]) error {
+func (s *pgEventStore[T]) Store(ctx context.Context, events ...Event[T]) error {
 	pgEvents := make([]*pgEvent, 0, len(events))
 	for _, event := range events {
 		pgEvent, err := s.toPgEvent(event)
@@ -47,7 +48,9 @@ func (s *pgEventStore[T]) Store(events ...Event[T]) error {
 		pgEvents = append(pgEvents, pgEvent)
 	}
 
-	return s.db.Create(pgEvents).Error
+	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		return tx.Create(pgEvents).Error
+	})
 }
 
 func (s *pgEventStore[T]) Load(aggregateType AggregateType, aggregateId uuid.UUID) ([]Event[T], error) {

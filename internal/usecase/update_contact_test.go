@@ -66,7 +66,7 @@ func testUpdateContactValidation(t *testing.T) {
 
 			if tc.expectedError == nil {
 				container.contactCmdHandler.EXPECT().
-					Handle(gomock.Any()).
+					Handle(ctx, gomock.Any()).
 					Times(1).
 					Return(nil, nil)
 			}
@@ -91,7 +91,7 @@ func testUpdateContact(t *testing.T) {
 		}
 
 		container.contactCmdHandler.EXPECT().
-			Handle(gomock.Any()).
+			Handle(ctx, gomock.Any()).
 			Times(1).
 			Return(
 				&domain.Contact{
@@ -114,7 +114,7 @@ func testUpdateContact(t *testing.T) {
 		}
 
 		container.contactCmdHandler.EXPECT().
-			Handle(gomock.Any()).
+			Handle(ctx, gomock.Any()).
 			Times(1).
 			Return(
 				nil,
@@ -133,7 +133,7 @@ func testUpdateContact(t *testing.T) {
 		}
 
 		container.contactCmdHandler.EXPECT().
-			Handle(gomock.Any()).
+			Handle(ctx, gomock.Any()).
 			Times(1).
 			Return(
 				nil,
@@ -153,7 +153,7 @@ func testUpdateContact(t *testing.T) {
 		cmdWrongIssuer := user.New(uuid.New())
 
 		container.contactCmdHandler.EXPECT().
-			Handle(gomock.Any()).
+			Handle(ctx, gomock.Any()).
 			Times(1).
 			Return(
 				nil,

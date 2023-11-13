@@ -1,6 +1,7 @@
 package eventsourcing
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/google/uuid"
@@ -8,13 +9,13 @@ import (
 
 type CommandHandler[T Aggregate] interface {
 	// Handle is the global command handler that should be called by the application
-	Handle(Command[T]) (*T, error)
+	Handle(ctx context.Context, cmd Command[T]) (*T, error)
 
 	// HydrateAggregate an aggregate from already published events (internal)
-	HydrateAggregate(aggregateType AggregateType, aggregateId uuid.UUID) (*T, error)
+	HydrateAggregate(ctx context.Context, aggregateType AggregateType, aggregateId uuid.UUID) (*T, error)
 
 	// Apply checks command validity for an aggregate and return newly emitted events (internal)
-	ApplyCommand(aggregate *T, command Command[T]) (*T, []Event[T], error)
+	ApplyCommand(ctx context.Context, aggregate *T, command Command[T]) (*T, []Event[T], error)
 }
 
 type AggregateFactory[T Aggregate] func() *T
@@ -33,21 +34,21 @@ func NewCommandHandler[T Aggregate](eventStore EventStore[T], eventPublisher Pub
 	}
 }
 
-func (h *commandHandler[T]) Handle(c Command[T]) (*T, error) {
+func (h *commandHandler[T]) Handle(ctx context.Context, c Command[T]) (*T, error) {
 	// hydrate aggregate
-	aggregate, err := h.HydrateAggregate(c.AggregateType(), c.AggregateId())
+	aggregate, err := h.HydrateAggregate(ctx, c.AggregateType(), c.AggregateId())
 	if err != nil {
 		return new(T), fmt.Errorf("failed to hydrate aggregate(%s#%s): %w", c.AggregateType(), c.AggregateId(), err)
 	}
 
 	// check command validity for aggregate
-	aggregate, events, err := h.ApplyCommand(aggregate, c)
+	aggregate, events, err := h.ApplyCommand(ctx, aggregate, c)
 	if err != nil {
 		return new(T), fmt.Errorf("command (%T) rejected on aggregate(%s#%s): %w", c, c.AggregateType(), c.AggregateId(), err)
 	}
 
 	// persist and publish events
-	err = h.PersistAndPublish(events...)
+	err = h.PersistAndPublish(ctx, events...)
 	if err != nil {
 		return new(T), fmt.Errorf("failed to persist and publish events for aggregate(%s#%s): %w", c.AggregateType(), c.AggregateId(), err)
 	}
@@ -56,7 +57,7 @@ func (h *commandHandler[T]) Handle(c Command[T]) (*T, error) {
 	return aggregate, nil
 }
 
-func (h *commandHandler[T]) HydrateAggregate(aggregateType AggregateType, aggregateId uuid.UUID) (*T, error) {
+func (h *commandHandler[T]) HydrateAggregate(ctx context.Context, aggregateType AggregateType, aggregateId uuid.UUID) (*T, error) {
 	events, err := h.eventStore.Load(aggregateType, aggregateId)
 	if err != nil {
 		return new(T), fmt.Errorf("failed to load events for aggregate(%s#%s): %w", aggregateType, aggregateId, err)
@@ -77,7 +78,7 @@ func (h *commandHandler[T]) HydrateAggregate(aggregateType AggregateType, aggreg
 	return aggregate, nil
 }
 
-func (h *commandHandler[T]) ApplyCommand(aggregate *T, c Command[T]) (*T, []Event[T], error) {
+func (h *commandHandler[T]) ApplyCommand(ctx context.Context, aggregate *T, c Command[T]) (*T, []Event[T], error) {
 	agg := *aggregate
 	// check if command is valid for aggregate
 	events, err := c.Apply(aggregate)
@@ -97,8 +98,8 @@ func (h *commandHandler[T]) ApplyCommand(aggregate *T, c Command[T]) (*T, []Even
 }
 
 // TODO: make it transactional
-func (h *commandHandler[T]) PersistAndPublish(events ...Event[T]) error {
-	err := h.eventStore.Store(events...)
+func (h *commandHandler[T]) PersistAndPublish(ctx context.Context, events ...Event[T]) error {
+	err := h.eventStore.Store(ctx, events...)
 	if err != nil {
 		return fmt.Errorf("failed to store events: %w", err)
 	}

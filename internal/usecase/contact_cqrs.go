@@ -13,13 +13,13 @@ import (
 // ContactCmdHandler is a mock of eventsourcing.CommandHandler interface.
 type ContactCmdHandler interface {
 	// Handle is the global command handler that should be called by the application
-	Handle(eventsourcing.Command[domain.Contact]) (*domain.Contact, error)
+	Handle(ctx context.Context, cmd eventsourcing.Command[domain.Contact]) (*domain.Contact, error)
 
 	// HydrateAggregate an aggregate from already published events (internal)
-	HydrateAggregate(aggregateType eventsourcing.AggregateType, aggregateId uuid.UUID) (*domain.Contact, error)
+	HydrateAggregate(ctx context.Context, aggregateType eventsourcing.AggregateType, aggregateId uuid.UUID) (*domain.Contact, error)
 
 	// Apply checks command validity for an aggregate and return newly emitted events (internal)
-	ApplyCommand(aggregate *domain.Contact, command eventsourcing.Command[domain.Contact]) (*domain.Contact, []eventsourcing.Event[domain.Contact], error)
+	ApplyCommand(ctx context.Context, aggregate *domain.Contact, command eventsourcing.Command[domain.Contact]) (*domain.Contact, []eventsourcing.Event[domain.Contact], error)
 }
 
 type ContactLister interface {

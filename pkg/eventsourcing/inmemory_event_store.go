@@ -1,9 +1,13 @@
 package eventsourcing
 
-import "github.com/google/uuid"
+import (
+	"context"
+
+	"github.com/google/uuid"
+)
 
 type EventStore[T Aggregate] interface {
-	Store(events ...Event[T]) error
+	Store(ctx context.Context, events ...Event[T]) error
 	Load(aggregateType AggregateType, aggregateId uuid.UUID) ([]Event[T], error)
 }
 
