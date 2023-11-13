@@ -46,13 +46,14 @@ type DirectiveRoot struct {
 
 type ComplexityRoot struct {
 	Contact struct {
-		CreatedAt func(childComplexity int) int
-		Email     func(childComplexity int) int
-		FirstName func(childComplexity int) int
-		ID        func(childComplexity int) int
-		LastName  func(childComplexity int) int
-		Phone     func(childComplexity int) int
-		UpdatedAt func(childComplexity int) int
+		AggregateVersion func(childComplexity int) int
+		CreatedAt        func(childComplexity int) int
+		Email            func(childComplexity int) int
+		FirstName        func(childComplexity int) int
+		ID               func(childComplexity int) int
+		LastName         func(childComplexity int) int
+		Phone            func(childComplexity int) int
+		UpdatedAt        func(childComplexity int) int
 	}
 
 	Mutation struct {
@@ -89,6 +90,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	ec := executionContext{nil, e, 0, 0, nil}
 	_ = ec
 	switch typeName + "." + field {
+
+	case "Contact.aggregateVersion":
+		if e.complexity.Contact.AggregateVersion == nil {
+			break
+		}
+
+		return e.complexity.Contact.AggregateVersion(childComplexity), true
 
 	case "Contact.createdAt":
 		if e.complexity.Contact.CreatedAt == nil {
@@ -722,6 +730,50 @@ func (ec *executionContext) fieldContext_Contact_email(ctx context.Context, fiel
 	return fc, nil
 }
 
+func (ec *executionContext) _Contact_aggregateVersion(ctx context.Context, field graphql.CollectedField, obj *model.Contact) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Contact_aggregateVersion(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AggregateVersion, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Contact_aggregateVersion(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Contact",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_createContact(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_createContact(ctx, field)
 	if err != nil {
@@ -775,6 +827,8 @@ func (ec *executionContext) fieldContext_Mutation_createContact(ctx context.Cont
 				return ec.fieldContext_Contact_phone(ctx, field)
 			case "email":
 				return ec.fieldContext_Contact_email(ctx, field)
+			case "aggregateVersion":
+				return ec.fieldContext_Contact_aggregateVersion(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Contact", field.Name)
 		},
@@ -846,6 +900,8 @@ func (ec *executionContext) fieldContext_Mutation_updateContact(ctx context.Cont
 				return ec.fieldContext_Contact_phone(ctx, field)
 			case "email":
 				return ec.fieldContext_Contact_email(ctx, field)
+			case "aggregateVersion":
+				return ec.fieldContext_Contact_aggregateVersion(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Contact", field.Name)
 		},
@@ -917,6 +973,8 @@ func (ec *executionContext) fieldContext_Mutation_deleteContact(ctx context.Cont
 				return ec.fieldContext_Contact_phone(ctx, field)
 			case "email":
 				return ec.fieldContext_Contact_email(ctx, field)
+			case "aggregateVersion":
+				return ec.fieldContext_Contact_aggregateVersion(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Contact", field.Name)
 		},
@@ -988,6 +1046,8 @@ func (ec *executionContext) fieldContext_Query_listContacts(ctx context.Context,
 				return ec.fieldContext_Contact_phone(ctx, field)
 			case "email":
 				return ec.fieldContext_Contact_email(ctx, field)
+			case "aggregateVersion":
+				return ec.fieldContext_Contact_aggregateVersion(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Contact", field.Name)
 		},
@@ -3007,6 +3067,11 @@ func (ec *executionContext) _Contact(ctx context.Context, sel ast.SelectionSet, 
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "aggregateVersion":
+			out.Values[i] = ec._Contact_aggregateVersion(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -3586,6 +3651,21 @@ func (ec *executionContext) unmarshalNID2string(ctx context.Context, v interface
 
 func (ec *executionContext) marshalNID2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
 	res := graphql.MarshalID(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
+}
+
+func (ec *executionContext) unmarshalNInt2int(ctx context.Context, v interface{}) (int, error) {
+	res, err := graphql.UnmarshalInt(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.SelectionSet, v int) graphql.Marshaler {
+	res := graphql.MarshalInt(v)
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")

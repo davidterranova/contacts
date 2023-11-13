@@ -11,6 +11,7 @@ type Contact {
   lastName: String!
   phone: String!
   email: String!
+  aggregateVersion: Int!
 }
 
 input NewContact {
