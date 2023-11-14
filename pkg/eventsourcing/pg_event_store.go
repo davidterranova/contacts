@@ -177,12 +177,13 @@ func (s *pgEventStore[T]) fromPgEvent(pgEvent pgEvent) (Event[T], error) {
 
 	return s.registry.Hydrate(
 		EventBase[T]{
-			eventId:       pgEvent.EventId,
-			eventIssuesAt: pgEvent.EventIssuedAt,
-			eventIssuedBy: u,
-			eventType:     pgEvent.EventType,
-			aggregateType: pgEvent.AggregateType,
-			aggregateId:   pgEvent.AggregateId,
+			eventId:          pgEvent.EventId,
+			eventIssuesAt:    pgEvent.EventIssuedAt,
+			eventIssuedBy:    u,
+			eventType:        pgEvent.EventType,
+			aggregateType:    pgEvent.AggregateType,
+			aggregateId:      pgEvent.AggregateId,
+			aggregateVersion: pgEvent.AggregateVersion,
 		},
 		pgEvent.EventData,
 	)
