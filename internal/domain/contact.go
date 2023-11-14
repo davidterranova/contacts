@@ -11,7 +11,7 @@ import (
 const AggregateContact eventsourcing.AggregateType = "contact"
 
 type Contact struct {
-	*eventsourcing.AggregateBase
+	*eventsourcing.AggregateBase[Contact]
 
 	CreatedAt time.Time
 	UpdatedAt time.Time
@@ -28,7 +28,7 @@ func New() *Contact {
 	now := time.Now().UTC()
 
 	return &Contact{
-		AggregateBase: eventsourcing.NewAggregateBase(uuid.Nil),
+		AggregateBase: eventsourcing.NewAggregateBase[Contact](uuid.Nil),
 		CreatedAt:     now,
 		UpdatedAt:     now,
 	}

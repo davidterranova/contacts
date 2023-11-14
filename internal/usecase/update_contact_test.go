@@ -95,7 +95,7 @@ func testUpdateContact(t *testing.T) {
 			Times(1).
 			Return(
 				&domain.Contact{
-					AggregateBase: eventsourcing.NewAggregateBase(uuid),
+					AggregateBase: eventsourcing.NewAggregateBase[domain.Contact](uuid),
 					FirstName:     cmd.FirstName,
 				},
 				nil,

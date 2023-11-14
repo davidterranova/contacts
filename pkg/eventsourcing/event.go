@@ -33,8 +33,8 @@ type EventBase[T Aggregate] struct {
 	aggregateVersion int
 }
 
-func NewEventBase[T Aggregate](aggregateType AggregateType, aggregateVersion int, eventType string, aggregateId uuid.UUID, issuedBy user.User) EventBase[T] {
-	return EventBase[T]{
+func NewEventBase[T Aggregate](aggregateType AggregateType, aggregateVersion int, eventType string, aggregateId uuid.UUID, issuedBy user.User) *EventBase[T] {
+	return &EventBase[T]{
 		eventId:          uuid.New(),
 		eventIssuedBy:    issuedBy,
 		eventIssuesAt:    time.Now().UTC(),

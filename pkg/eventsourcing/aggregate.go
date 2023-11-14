@@ -6,37 +6,44 @@ type AggregateType string
 
 type Aggregate interface {
 	AggregateId() uuid.UUID
-	// SetAggregateId(uuid.UUID)
 	AggregateType() AggregateType
 
 	IncrementVersion()
 	AggregateVersion() int
 }
 
-type AggregateBase struct {
+type AggregateBase[T Aggregate] struct {
 	aggregateId      uuid.UUID
 	aggregateVersion int
+	events           []Event[T]
 }
 
-func NewAggregateBase(aggregateId uuid.UUID) *AggregateBase {
-	return &AggregateBase{
+func NewAggregateBase[T Aggregate](aggregateId uuid.UUID) *AggregateBase[T] {
+	return &AggregateBase[T]{
 		aggregateId:      aggregateId,
 		aggregateVersion: 0,
+		events:           make([]Event[T], 0),
 	}
 }
 
-func (a AggregateBase) AggregateId() uuid.UUID {
+func (a AggregateBase[T]) AggregateId() uuid.UUID {
 	return a.aggregateId
 }
 
-func (a *AggregateBase) SetAggregateId(aggregateId uuid.UUID) {
-	a.aggregateId = aggregateId
+func (a *AggregateBase[T]) Process(e Event[T]) {
+	a.aggregateId = e.AggregateId()
+	a.aggregateVersion = e.AggregateVersion()
+	a.events = append(a.events, e)
 }
 
-func (a *AggregateBase) IncrementVersion() {
+func (a *AggregateBase[T]) IncrementVersion() {
 	a.aggregateVersion++
 }
 
-func (a AggregateBase) AggregateVersion() int {
+func (a AggregateBase[T]) AggregateVersion() int {
 	return a.aggregateVersion
+}
+
+func (a AggregateBase[T]) Events() []Event[T] {
+	return a.events
 }
