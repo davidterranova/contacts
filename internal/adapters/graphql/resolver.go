@@ -48,7 +48,7 @@ func (r *Resolver) CreateContact(ctx context.Context, input model.NewContact) (*
 			Email:     input.Email,
 			Phone:     input.Phone,
 		},
-		user.NewUnauthenticated(), // TODO: to fix
+		user.Unauthenticated, // TODO: to fix
 	)
 	if err != nil {
 		return nil, err
@@ -59,13 +59,14 @@ func (r *Resolver) CreateContact(ctx context.Context, input model.NewContact) (*
 
 func toGQLContact(contact *domain.Contact) *model.Contact {
 	return &model.Contact{
-		ID:        contact.Id.String(),
-		CreatedAt: contact.CreatedAt.Format("2006-01-02T15:04:05Z"),
-		UpdatedAt: contact.UpdatedAt.Format("2006-01-02T15:04:05Z"),
-		FirstName: contact.FirstName,
-		LastName:  contact.LastName,
-		Email:     contact.Email,
-		Phone:     contact.Phone,
+		ID:               contact.AggregateId().String(),
+		CreatedAt:        contact.CreatedAt.Format("2006-01-02T15:04:05Z"),
+		UpdatedAt:        contact.UpdatedAt.Format("2006-01-02T15:04:05Z"),
+		FirstName:        contact.FirstName,
+		LastName:         contact.LastName,
+		Email:            contact.Email,
+		Phone:            contact.Phone,
+		AggregateVersion: contact.AggregateVersion(),
 	}
 }
 

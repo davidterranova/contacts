@@ -24,7 +24,7 @@ func testUpdateContactValidation(t *testing.T) {
 	ctx := context.Background()
 	container := testContainer(t)
 	contactUpdater := NewUpdateContact(container.contactCmdHandler)
-	cmdIssuer := user.New(uuid.New(), user.UserTypeAuthenticated)
+	cmdIssuer := user.New(uuid.New())
 
 	testCases := []struct {
 		name          string
@@ -66,7 +66,7 @@ func testUpdateContactValidation(t *testing.T) {
 
 			if tc.expectedError == nil {
 				container.contactCmdHandler.EXPECT().
-					Handle(gomock.Any()).
+					Handle(ctx, gomock.Any()).
 					Times(1).
 					Return(nil, nil)
 			}
@@ -81,7 +81,7 @@ func testUpdateContact(t *testing.T) {
 	ctx := context.Background()
 	container := testContainer(t)
 	contactUpdater := NewUpdateContact(container.contactCmdHandler)
-	cmdIssuer := user.New(uuid.New(), user.UserTypeAuthenticated)
+	cmdIssuer := user.New(uuid.New())
 
 	t.Run("successfully update contact", func(t *testing.T) {
 		uuid := uuid.New()
@@ -91,19 +91,19 @@ func testUpdateContact(t *testing.T) {
 		}
 
 		container.contactCmdHandler.EXPECT().
-			Handle(gomock.Any()).
+			Handle(ctx, gomock.Any()).
 			Times(1).
 			Return(
 				&domain.Contact{
-					Id:        uuid,
-					FirstName: cmd.FirstName,
+					AggregateBase: eventsourcing.NewAggregateBase[domain.Contact](uuid),
+					FirstName:     cmd.FirstName,
 				},
 				nil,
 			)
 
 		updatedContact, err := contactUpdater.Update(ctx, cmd, cmdIssuer)
 		assert.NoError(t, err)
-		assert.Equal(t, cmd.ContactId, updatedContact.Id.String())
+		assert.Equal(t, cmd.ContactId, updatedContact.AggregateId().String())
 		assert.Equal(t, cmd.FirstName, updatedContact.FirstName)
 	})
 
@@ -114,7 +114,7 @@ func testUpdateContact(t *testing.T) {
 		}
 
 		container.contactCmdHandler.EXPECT().
-			Handle(gomock.Any()).
+			Handle(ctx, gomock.Any()).
 			Times(1).
 			Return(
 				nil,
@@ -133,7 +133,7 @@ func testUpdateContact(t *testing.T) {
 		}
 
 		container.contactCmdHandler.EXPECT().
-			Handle(gomock.Any()).
+			Handle(ctx, gomock.Any()).
 			Times(1).
 			Return(
 				nil,
@@ -150,10 +150,10 @@ func testUpdateContact(t *testing.T) {
 			ContactId: uuid.NewString(),
 			FirstName: "John",
 		}
-		cmdWrongIssuer := user.New(uuid.New(), user.UserTypeAuthenticated)
+		cmdWrongIssuer := user.New(uuid.New())
 
 		container.contactCmdHandler.EXPECT().
-			Handle(gomock.Any()).
+			Handle(ctx, gomock.Any()).
 			Times(1).
 			Return(
 				nil,

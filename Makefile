@@ -32,7 +32,7 @@ lint-fix:
 	$(LINT) run --fix ./...
 
 .PHONY: test-unit
-test-unit:
+test-unit: compose-up
 	find . -name '.sequence' -type d | xargs rm -rf
 	go test ./... -v -count=1 -race -cover
 
@@ -50,3 +50,23 @@ gqlgen:
 grpcgen:
 	protoc -I=$(GRPC_SRC_DIR) --go_out=$(GRPC_DST_DIR) $(GRPC_SRC_DIR)/contacts.proto
 	protoc --go_out=$(GRPC_DST_DIR) --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative $(GRPC_SRC_DIR)/contacts.proto
+
+.PHONY: compose-up
+compose-up:
+	docker-compose up -d
+
+.PHONY: compose-down
+compose-down:
+	docker-compose down
+
+.PHONY: gen-migration
+gen-migration:
+	migrate create -ext sql -dir pkg/pg/migrations -seq $(name)
+
+.PHONY: migrate-up
+migrate-up:
+	go run main.go dbmigrate up --target eventstore
+
+.PHONY: migrate-down
+migrate-down:
+	go run main.go dbmigrate down --target eventstore

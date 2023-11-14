@@ -1,6 +1,11 @@
 package user
 
-import "github.com/google/uuid"
+import (
+	"encoding/json"
+	"fmt"
+
+	"github.com/google/uuid"
+)
 
 type UserType string
 
@@ -10,56 +15,81 @@ const (
 	UserTypeUnauthenticated UserType = "unauthenticated"
 )
 
-type User interface {
-	Id() uuid.UUID
-	Type() UserType
+var (
+	Unauthenticated = new(uuid.Nil, UserTypeUnauthenticated)
+	System          = new(uuid.Nil, UserTypeSystem)
+)
+
+type User struct {
+	id       uuid.UUID
+	userType UserType
 }
 
-func New(id uuid.UUID, userType UserType) User {
-	switch userType {
-	case UserTypeAuthenticated:
-		return &UserAuthenticated{id: id}
-	case UserTypeSystem:
-		return &UserSystem{id: id}
-	default:
-		return &UserUnauthenticated{}
+func New(id uuid.UUID) User {
+	return new(id, UserTypeAuthenticated)
+}
+
+func new(id uuid.UUID, userType UserType) User {
+	return User{
+		id:       id,
+		userType: userType,
 	}
 }
 
-func NewUnauthenticated() *UserAuthenticated {
-	return &UserAuthenticated{id: uuid.Nil}
-}
-
-type UserAuthenticated struct {
-	id uuid.UUID
-}
-
-func (u UserAuthenticated) Id() uuid.UUID {
+func (u User) Id() uuid.UUID {
 	return u.id
 }
 
-func (u UserAuthenticated) Type() UserType {
-	return UserTypeAuthenticated
+func (u User) Type() UserType {
+	return u.userType
 }
 
-type UserSystem struct {
-	id uuid.UUID
+func (u User) IsAuthenticatedOrSystem() bool {
+	return u.userType == UserTypeAuthenticated || u.userType == UserTypeSystem
 }
 
-func (u UserSystem) Id() uuid.UUID {
-	return u.id
+func (u User) MarshalJSON() ([]byte, error) {
+	return json.Marshal(struct {
+		Id   uuid.UUID `json:"id"`
+		Type string    `json:"type"`
+	}{
+		Id:   u.id,
+		Type: string(u.userType),
+	})
 }
 
-func (u UserSystem) Type() UserType {
-	return UserTypeSystem
+func (u *User) UnmarshalJSON(data []byte) error {
+	type alias struct {
+		Id   uuid.UUID `json:"id"`
+		Type string    `json:"type"`
+	}
+
+	var a alias
+	err := json.Unmarshal(data, &a)
+	if err != nil {
+		return err
+	}
+
+	u.id = a.Id
+	u.userType = UserType(a.Type)
+
+	return nil
 }
 
-type UserUnauthenticated struct{}
-
-func (u UserUnauthenticated) Id() uuid.UUID {
-	return uuid.Nil
+func (u User) String() string {
+	return fmt.Sprintf("%s:%s", u.userType, u.id)
 }
 
-func (u UserUnauthenticated) Type() UserType {
-	return UserTypeUnauthenticated
+func FromString(s string) User {
+	var (
+		userType UserType
+		id       uuid.UUID
+	)
+
+	fmt.Sscanf(s, "%s:%s", &userType, &id)
+
+	return User{
+		id:       id,
+		userType: userType,
+	}
 }

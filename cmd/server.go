@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"fmt"
 	"net"
 	"os"
 	"os/signal"
@@ -17,6 +18,7 @@ import (
 
 	ihttp "github.com/davidterranova/contacts/internal/adapters/http"
 	"github.com/davidterranova/contacts/pkg/eventsourcing"
+	"github.com/davidterranova/contacts/pkg/pg"
 	"github.com/davidterranova/contacts/pkg/xhttp"
 	"github.com/gorilla/mux"
 	"github.com/rs/zerolog/log"
@@ -25,26 +27,33 @@ import (
 )
 
 var serverCmd = &cobra.Command{
-	Use:   "server",
-	Short: "starts contacts server",
-	Run:   runServer,
+	Use:    "server",
+	Short:  "starts contacts server",
+	PreRun: initConfig,
+	Run:    runServer,
 }
 
 func runServer(cmd *cobra.Command, args []string) {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer cancel()
 
-	eventStream := eventsourcing.NewInMemoryPublisher[*domain.Contact](context.Background(), 100)
-	eventStore := eventsourcing.NewInMemoryEventStore[*domain.Contact]()
-	contactWriteModel := eventsourcing.NewCommandHandler[*domain.Contact](
-		eventStore,
-		eventStream,
-		func() *domain.Contact {
-			return &domain.Contact{}
-		},
-	)
+	eventRegistry := eventsourcing.NewRegistry[domain.Contact]()
+	domain.RegisterEvents(eventRegistry)
 
-	contactReadModel := ports.NewInMemoryContactList(eventStream)
+	eventStream := eventsourcing.NewInMemoryPublisher[domain.Contact](context.Background(), 100)
+	contactWriteModel, eventStreamPublisher, err := writeModel(ctx, cfg.EventStoreDB, eventRegistry, eventStream)
+	if err != nil {
+		log.Ctx(ctx).Panic().Err(err).Msg("failed to create write model")
+	}
+
+	// start publishing events
+	go eventStreamPublisher.Run(ctx)
+
+	contactReadModel, err := readModel(ctx, cfg.ReadModelDB, eventStream)
+	if err != nil {
+		log.Ctx(ctx).Panic().Err(err).Msg("failed to create read model")
+	}
+
 	app := internal.New(contactWriteModel, contactReadModel)
 
 	go gqlAPIServer(ctx, app)
@@ -65,7 +74,7 @@ func httpAPIServer(ctx context.Context, app *internal.App) {
 		app,
 		xhttp.GrantAnyFn(),
 	)
-	server := xhttp.NewServer(router, "", 8080)
+	server := xhttp.NewServer(router, cfg.HTTP)
 
 	err := server.Serve(ctx)
 	if err != nil {
@@ -78,7 +87,7 @@ func gqlAPIServer(ctx context.Context, app *internal.App) {
 	root := mux.NewRouter()
 	root.Handle("/query", srv)
 	root.Handle("/", playground.Handler("GraphQL playground", "/query"))
-	server := xhttp.NewServer(root, "", 8181)
+	server := xhttp.NewServer(root, cfg.GQL)
 
 	err := server.Serve(ctx)
 	if err != nil {
@@ -87,7 +96,8 @@ func gqlAPIServer(ctx context.Context, app *internal.App) {
 }
 
 func grpcServer(ctx context.Context, app *internal.App) {
-	listener, err := net.Listen("tcp", ":8282")
+	listenTo := fmt.Sprintf("%s:%d", cfg.GRPC.Host, cfg.GRPC.Port)
+	listener, err := net.Listen("tcp", listenTo)
 	if err != nil {
 		log.Ctx(ctx).Panic().Err(err).Msg("failed to listen GRPC port")
 	}
@@ -100,6 +110,42 @@ func grpcServer(ctx context.Context, app *internal.App) {
 	if err != nil {
 		log.Ctx(ctx).Panic().Err(err).Msg("failed to start GRPC server")
 	}
+}
+
+func writeModel(ctx context.Context, cfg pg.DBConfig, eventRegistry *eventsourcing.EventRegistry[domain.Contact], eventStream eventsourcing.EventStream[domain.Contact]) (eventsourcing.CommandHandler[domain.Contact], *eventsourcing.EventStreamPublisher[domain.Contact], error) {
+	// eventStore := eventsourcing.NewInMemoryEventStore[domain.Contact]()
+	pg, err := pg.Open(pg.DBConfig{
+		Name:       cfg.Name,
+		ConnString: cfg.ConnString,
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	eventStore := eventsourcing.NewPGEventStore[domain.Contact](pg, eventRegistry)
+	eventPublisher := eventsourcing.NewEventStreamPublisher[domain.Contact](eventStore, eventStream, 10)
+
+	contactWriteModel := eventsourcing.NewCommandHandler[domain.Contact](
+		eventStore,
+		func() *domain.Contact {
+			return domain.New()
+		},
+	)
+
+	return contactWriteModel, eventPublisher, nil
+}
+
+func readModel(ctx context.Context, cfg pg.DBConfig, eventStream eventsourcing.EventStream[domain.Contact]) (*ports.PgContactList, error) {
+	// contactReadModel := ports.NewInMemoryContactList(eventStream)
+
+	pg, err := pg.Open(pg.DBConfig{
+		Name:       cfg.Name,
+		ConnString: cfg.ConnString,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return ports.NewPgContactList(pg, eventStream), nil
 }
 
 func init() {

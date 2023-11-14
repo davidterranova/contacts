@@ -121,13 +121,14 @@ func (h *Handler) mustEmbedUnimplementedContactsServer() {}
 
 func toPBContact(contact *domain.Contact) *Contact {
 	return &Contact{
-		Id:        contact.Id.String(),
-		CreatedAt: contact.CreatedAt.Format(layout),
-		UpdatedAt: contact.UpdatedAt.Format(layout),
-		FirstName: contact.FirstName,
-		LastName:  contact.LastName,
-		Email:     contact.Email,
-		Phone:     contact.Phone,
+		Id:               contact.AggregateId().String(),
+		CreatedAt:        contact.CreatedAt.Format(layout),
+		UpdatedAt:        contact.UpdatedAt.Format(layout),
+		FirstName:        contact.FirstName,
+		LastName:         contact.LastName,
+		Email:            contact.Email,
+		Phone:            contact.Phone,
+		AggregateVersion: int32(contact.AggregateVersion()),
 	}
 }
 

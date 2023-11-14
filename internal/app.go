@@ -10,7 +10,7 @@ import (
 )
 
 type ContactWriteModel interface {
-	eventsourcing.CommandHandler[*domain.Contact]
+	eventsourcing.CommandHandler[domain.Contact]
 }
 
 type ContactReadModel interface {

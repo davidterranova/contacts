@@ -21,10 +21,10 @@ type CmdUpdateContact struct {
 
 type UpdateContact struct {
 	validator      *validator.Validate
-	commandHandler eventsourcing.CommandHandler[*domain.Contact]
+	commandHandler eventsourcing.CommandHandler[domain.Contact]
 }
 
-func NewUpdateContact(commandHandler eventsourcing.CommandHandler[*domain.Contact]) UpdateContact {
+func NewUpdateContact(commandHandler eventsourcing.CommandHandler[domain.Contact]) UpdateContact {
 	return UpdateContact{
 		validator:      validator.New(),
 		commandHandler: commandHandler,
@@ -43,7 +43,7 @@ func (h UpdateContact) Update(ctx context.Context, cmd CmdUpdateContact, cmdIssu
 	}
 
 	checkedCmd := newCmdUpdateContact(uuid, cmd, cmdIssuedBy)
-	return handleErrs(h.commandHandler.Handle(checkedCmd))
+	return handleErrs(h.commandHandler.Handle(ctx, checkedCmd))
 }
 
 type cmdUpdateContact struct {
@@ -62,7 +62,7 @@ func newCmdUpdateContact(contactId uuid.UUID, data CmdUpdateContact, cmdIssuedBy
 	}
 }
 
-func (c cmdUpdateContact) Apply(aggregate *domain.Contact) ([]eventsourcing.Event[*domain.Contact], error) {
+func (c cmdUpdateContact) Apply(aggregate *domain.Contact) ([]eventsourcing.Event[domain.Contact], error) {
 	if aggregate.AggregateId() == uuid.Nil {
 		return nil, eventsourcing.ErrAggregateNotFound
 	}
@@ -73,23 +73,35 @@ func (c cmdUpdateContact) Apply(aggregate *domain.Contact) ([]eventsourcing.Even
 		return nil, ErrNotFound
 	}
 
-	events := make([]eventsourcing.Event[*domain.Contact], 0)
+	aggregateVersion := aggregate.AggregateVersion()
+	events := make([]eventsourcing.Event[domain.Contact], 0)
 	if c.FirstName != "" || c.LastName != "" {
+		updateNames := false
+		firstName := aggregate.FirstName
+		lastName := aggregate.LastName
+
 		if c.FirstName != "" && c.FirstName != aggregate.FirstName {
-			aggregate.FirstName = c.FirstName
+			firstName = c.FirstName
+			updateNames = true
 		}
 		if c.LastName != "" && c.LastName != aggregate.LastName {
-			aggregate.LastName = c.LastName
+			lastName = c.LastName
+			updateNames = true
 		}
 
-		events = append(events, domain.NewEvtContactNameUpdated(c.AggregateId(), c.IssuedBy(), aggregate.FirstName, aggregate.LastName))
+		if updateNames {
+			aggregateVersion++
+			events = append(events, domain.NewEvtContactNameUpdated(c.AggregateId(), aggregateVersion, c.IssuedBy(), firstName, lastName))
+		}
 	}
 
 	if c.Email != "" && aggregate.Email != c.Email {
-		events = append(events, domain.NewEvtContactEmailUpdated(c.AggregateId(), c.IssuedBy(), c.Email))
+		aggregateVersion++
+		events = append(events, domain.NewEvtContactEmailUpdated(c.AggregateId(), aggregateVersion, c.IssuedBy(), c.Email))
 	}
 	if c.Phone != "" && aggregate.Phone != c.Phone {
-		events = append(events, domain.NewEvtContactPhoneUpdated(c.AggregateId(), c.IssuedBy(), c.Phone))
+		aggregateVersion++
+		events = append(events, domain.NewEvtContactPhoneUpdated(c.AggregateId(), aggregateVersion, c.IssuedBy(), c.Phone))
 	}
 
 	return events, nil

@@ -36,7 +36,7 @@ func testCreateContactValidation(t *testing.T) {
 	ctx := context.Background()
 	container := testContainer(t)
 	contactCreator := NewCreateContact(container.contactCmdHandler)
-	cmdIssuer := user.New(uuid.New(), user.UserTypeAuthenticated)
+	cmdIssuer := user.New(uuid.New())
 
 	testCases := []struct {
 		name          string
@@ -81,7 +81,7 @@ func testCreateContactValidation(t *testing.T) {
 
 			if tc.expectedError == nil {
 				container.contactCmdHandler.EXPECT().
-					Handle(gomock.Any()).
+					Handle(ctx, gomock.Any()).
 					Times(1).
 					Return(nil, nil)
 			}
@@ -96,7 +96,7 @@ func testCreateContact(t *testing.T) {
 	ctx := context.Background()
 	container := testContainer(t)
 	contactCreator := NewCreateContact(container.contactCmdHandler)
-	cmdIssuer := user.New(uuid.New(), user.UserTypeAuthenticated)
+	cmdIssuer := user.New(uuid.New())
 
 	t.Run("successful contact creation", func(t *testing.T) {
 		cmd := CmdCreateContact{
@@ -107,7 +107,7 @@ func testCreateContact(t *testing.T) {
 		}
 
 		container.contactCmdHandler.EXPECT().
-			Handle(gomock.Any()).
+			Handle(ctx, gomock.Any()).
 			Times(1).
 			Return(
 				&domain.Contact{
@@ -138,7 +138,7 @@ func testCreateContact(t *testing.T) {
 		}
 
 		container.contactCmdHandler.EXPECT().
-			Handle(gomock.Any()).
+			Handle(ctx, gomock.Any()).
 			Times(1).
 			Return(
 				nil,

@@ -1,0 +1,26 @@
+CONTACT_LOG_LEVEL=debug
+CONTACT_LOG_FORMAT=text
+CONTACT_LOG_HOST="localhost"
+
+# HTTP
+CONTACT_HTTP_HOST=""
+CONTACT_HTTP_PORT=8080
+
+# GQL
+CONTACT_GQL_HOST=""
+CONTACT_GQL_PORT=8080
+
+# GRPC
+CONTACT_GRPC_HOST=""
+CONTACT_GRPC_PORT=8080
+
+# DB
+CONTACT_EVENT_STORE_DB_NAME=contacts
+CONTACT_EVENT_STORE_DB_CONN_STRING=postgres://postgres:password@localhost:5432/contacts?search_path=event_store&sslmode=disable
+CONTACT_READ_MODEL_DB_NAME=contacts
+CONTACT_READ_MODEL_DB_CONN_STRING=postgres://postgres:password@localhost:5432/contacts?search_path=read_model&sslmode=disable
+
+# Docker DB
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=password
+POSTGRES_DB=contacts

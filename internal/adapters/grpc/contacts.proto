@@ -17,6 +17,7 @@ message Contact {
   string lastName = 5;
   string email = 6;
   string phone = 7;
+  int32 aggregate_version = 8;
 }
 
 message ListContactsRequest {}

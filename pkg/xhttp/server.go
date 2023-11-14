@@ -9,27 +9,33 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-const (
-	// DefaultWriteTimeout for the http server
-	DefaultWriteTimeout = 5 * time.Second
-
-	// DefaultReadTimeout for the http server
-	DefaultReadTimeout = 5 * time.Second
-)
+type HTTPConfig struct {
+	Host              string        `envconfig:"HOST" default:""`
+	Port              int           `envconfig:"PORT" default:"8080"`
+	ReadTimeout       time.Duration `envconfig:"READ_TIMEOUT" default:"5s"`
+	ReadHeaderTimeout time.Duration `envconfig:"READ_HEADER_TIMEOUT" default:"1s"`
+	WriteTimeout      time.Duration `envconfig:"WRITE_TIMEOUT" default:"5s"`
+}
 
 // Server is a filestorage http server
 type Server struct {
-	host    string
-	port    int
-	handler http.Handler
+	host              string
+	port              int
+	readTimeout       time.Duration
+	readHeaderTimeout time.Duration
+	writeTimeout      time.Duration
+	handler           http.Handler
 }
 
 // NewServer creates a new http server given a handler and a configuration
-func NewServer(handler http.Handler, host string, port int) *Server {
+func NewServer(handler http.Handler, cfg HTTPConfig) *Server {
 	return &Server{
-		host:    host,
-		port:    port,
-		handler: handler,
+		host:              cfg.Host,
+		port:              cfg.Port,
+		readTimeout:       cfg.ReadTimeout,
+		readHeaderTimeout: cfg.ReadHeaderTimeout,
+		writeTimeout:      cfg.WriteTimeout,
+		handler:           handler,
 	}
 }
 
@@ -43,9 +49,9 @@ func (s Server) Serve(ctx context.Context) error {
 	srv := http.Server{
 		Addr:              s.Address(),
 		Handler:           CORS()(s.handler),
-		WriteTimeout:      DefaultWriteTimeout,
-		ReadTimeout:       DefaultReadTimeout,
-		ReadHeaderTimeout: DefaultReadTimeout,
+		WriteTimeout:      s.writeTimeout,
+		ReadTimeout:       s.readTimeout,
+		ReadHeaderTimeout: s.readHeaderTimeout,
 	}
 
 	go func() {

@@ -3,6 +3,8 @@ package eventsourcing
 import (
 	"context"
 	"sync"
+
+	"github.com/rs/zerolog/log"
 )
 
 type EventStream[T Aggregate] interface {
@@ -11,13 +13,13 @@ type EventStream[T Aggregate] interface {
 }
 
 type Publisher[T Aggregate] interface {
-	Publish(events ...Event[T]) error
+	Publish(ctx context.Context, events ...Event[T]) error
 }
 
 type SubscribeFn[T Aggregate] func(e Event[T])
 
 type Subscriber[T Aggregate] interface {
-	Subscribe(sub SubscribeFn[T])
+	Subscribe(ctx context.Context, sub SubscribeFn[T])
 }
 
 type eventStream[T Aggregate] struct {
@@ -33,13 +35,14 @@ func NewInMemoryPublisher[T Aggregate](ctx context.Context, buffer int) *eventSt
 		stream:      make(chan Event[T], buffer),
 		subscribers: make([]SubscribeFn[T], 0),
 	}
-	p.Run()
+	go p.Run()
 
 	return p
 }
 
-func (p *eventStream[T]) Publish(events ...Event[T]) error {
+func (p *eventStream[T]) Publish(ctx context.Context, events ...Event[T]) error {
 	for _, event := range events {
+		log.Ctx(ctx).Debug().Str("type", event.EventType()).Interface("event", event).Msg("publishing event")
 		p.stream <- event
 	}
 
@@ -47,7 +50,7 @@ func (p *eventStream[T]) Publish(events ...Event[T]) error {
 }
 
 func (p *eventStream[T]) Run() {
-	go func() {
+	func() {
 		for {
 			select {
 			case event := <-p.stream:
@@ -64,7 +67,7 @@ func (p *eventStream[T]) Run() {
 	}()
 }
 
-func (p *eventStream[T]) Subscribe(sub SubscribeFn[T]) {
+func (p *eventStream[T]) Subscribe(ctx context.Context, sub SubscribeFn[T]) {
 	p.mtx.Lock()
 	p.subscribers = append(p.subscribers, sub)
 	p.mtx.Unlock()
