@@ -14,7 +14,7 @@ import (
 
 type pgEventStore[T Aggregate] struct {
 	db       *gorm.DB
-	registry *Registry[T]
+	registry *EventRegistry[T]
 }
 
 type pgEvent struct {
@@ -43,7 +43,7 @@ func (pgOutboxEntry) TableName() string {
 	return "events_outbox"
 }
 
-func NewPGEventStore[T Aggregate](db *gorm.DB, registry *Registry[T]) *pgEventStore[T] {
+func NewPGEventStore[T Aggregate](db *gorm.DB, registry *EventRegistry[T]) *pgEventStore[T] {
 	return &pgEventStore[T]{
 		db:       db,
 		registry: registry,

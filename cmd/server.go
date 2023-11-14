@@ -112,7 +112,7 @@ func grpcServer(ctx context.Context, app *internal.App) {
 	}
 }
 
-func writeModel(ctx context.Context, cfg pg.DBConfig, eventRegistry *eventsourcing.Registry[domain.Contact], eventStream eventsourcing.EventStream[domain.Contact]) (eventsourcing.CommandHandler[domain.Contact], *eventsourcing.EventStreamPublisher[domain.Contact], error) {
+func writeModel(ctx context.Context, cfg pg.DBConfig, eventRegistry *eventsourcing.EventRegistry[domain.Contact], eventStream eventsourcing.EventStream[domain.Contact]) (eventsourcing.CommandHandler[domain.Contact], *eventsourcing.EventStreamPublisher[domain.Contact], error) {
 	// eventStore := eventsourcing.NewInMemoryEventStore[domain.Contact]()
 	pg, err := pg.Open(pg.DBConfig{
 		Name:       cfg.Name,
