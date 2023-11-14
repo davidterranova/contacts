@@ -17,6 +17,7 @@ type Config struct {
 	GQL          xhttp.HTTPConfig   `envconfig:"GQL"`
 	GRPC         xhttp.HTTPConfig   `envconfig:"GRPC"`
 	EventStoreDB pg.DBConfig        `envconfig:"EVENT_STORE_DB"`
+	ReadModelDB  pg.DBConfig        `envconfig:"READ_MODEL_DB"`
 }
 
 var cfg Config
