@@ -7,8 +7,8 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/davidterranova/contacts/internal/domain"
-	"github.com/davidterranova/contacts/internal/usecase"
+	"github.com/davidterranova/contacts/internal/contacts/domain"
+	"github.com/davidterranova/contacts/internal/contacts/usecase"
 	"github.com/davidterranova/contacts/pkg/auth"
 	"github.com/davidterranova/contacts/pkg/user"
 	"github.com/davidterranova/contacts/pkg/xhttp"

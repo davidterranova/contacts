@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/davidterranova/contacts/internal/domain"
+	"github.com/davidterranova/contacts/internal/contacts/domain"
 	"github.com/davidterranova/contacts/pkg/eventsourcing"
 	"github.com/davidterranova/contacts/pkg/user"
 	"github.com/go-playground/validator"

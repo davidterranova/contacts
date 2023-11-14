@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/davidterranova/contacts/internal/domain"
-	"github.com/davidterranova/contacts/internal/usecase"
+	"github.com/davidterranova/contacts/internal/contacts/domain"
+	"github.com/davidterranova/contacts/internal/contacts/usecase"
 	"github.com/davidterranova/contacts/pkg/eventsourcing"
 	"github.com/davidterranova/contacts/pkg/user"
 	"github.com/google/uuid"

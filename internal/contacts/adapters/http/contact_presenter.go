@@ -1,6 +1,6 @@
 package http
 
-import "github.com/davidterranova/contacts/internal/domain"
+import "github.com/davidterranova/contacts/internal/contacts/domain"
 
 type Contact struct {
 	Id               string `json:"id"`

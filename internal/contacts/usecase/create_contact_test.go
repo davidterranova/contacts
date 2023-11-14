@@ -5,7 +5,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/davidterranova/contacts/internal/domain"
+	"github.com/davidterranova/contacts/internal/contacts/domain"
 	"github.com/davidterranova/contacts/pkg/user"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"

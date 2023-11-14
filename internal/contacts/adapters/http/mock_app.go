@@ -12,8 +12,8 @@ import (
 	context "context"
 	reflect "reflect"
 
-	domain "github.com/davidterranova/contacts/internal/domain"
-	usecase "github.com/davidterranova/contacts/internal/usecase"
+	domain "github.com/davidterranova/contacts/internal/contacts/domain"
+	usecase "github.com/davidterranova/contacts/internal/contacts/usecase"
 	user "github.com/davidterranova/contacts/pkg/user"
 	gomock "go.uber.org/mock/gomock"
 )

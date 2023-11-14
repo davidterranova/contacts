@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/davidterranova/contacts/internal/domain"
+	"github.com/davidterranova/contacts/internal/contacts/domain"
 	"github.com/davidterranova/contacts/pkg/eventsourcing"
 )
 

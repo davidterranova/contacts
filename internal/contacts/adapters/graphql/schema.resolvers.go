@@ -7,8 +7,8 @@ package graphql
 import (
 	"context"
 
-	"github.com/davidterranova/contacts/internal/adapters/graphql/model"
-	"github.com/davidterranova/contacts/internal/usecase"
+	"github.com/davidterranova/contacts/internal/contacts/adapters/graphql/model"
+	"github.com/davidterranova/contacts/internal/contacts/usecase"
 	"github.com/davidterranova/contacts/pkg/auth"
 	"github.com/rs/zerolog/log"
 )

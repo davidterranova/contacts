@@ -3,7 +3,7 @@ package usecase
 import (
 	"context"
 
-	"github.com/davidterranova/contacts/internal/domain"
+	"github.com/davidterranova/contacts/internal/contacts/domain"
 	"github.com/davidterranova/contacts/pkg/user"
 )
 

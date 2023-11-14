@@ -5,7 +5,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/davidterranova/contacts/internal/domain"
+	"github.com/davidterranova/contacts/internal/contacts/domain"
 	"github.com/davidterranova/contacts/pkg/eventsourcing"
 	"github.com/davidterranova/contacts/pkg/user"
 	uuid "github.com/google/uuid"

@@ -12,7 +12,7 @@ import (
         gomock "go.uber.org/mock/gomock"
         reflect "reflect"
         context "context"
-        domain "github.com/davidterranova/contacts/internal/domain"
+        domain "github.com/davidterranova/contacts/internal/contacts/domain"
 )
 
 // MockContactCmdHandler is a mock of ContactCmdHandler interface.

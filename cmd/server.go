@@ -10,13 +10,13 @@ import (
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
-	"github.com/davidterranova/contacts/internal"
-	"github.com/davidterranova/contacts/internal/adapters/graphql"
-	lgrpc "github.com/davidterranova/contacts/internal/adapters/grpc"
-	"github.com/davidterranova/contacts/internal/domain"
-	"github.com/davidterranova/contacts/internal/ports"
+	"github.com/davidterranova/contacts/internal/contacts"
+	"github.com/davidterranova/contacts/internal/contacts/adapters/graphql"
+	lgrpc "github.com/davidterranova/contacts/internal/contacts/adapters/grpc"
+	"github.com/davidterranova/contacts/internal/contacts/domain"
+	"github.com/davidterranova/contacts/internal/contacts/ports"
 
-	ihttp "github.com/davidterranova/contacts/internal/adapters/http"
+	ihttp "github.com/davidterranova/contacts/internal/contacts/adapters/http"
 	"github.com/davidterranova/contacts/pkg/eventsourcing"
 	"github.com/davidterranova/contacts/pkg/pg"
 	"github.com/davidterranova/contacts/pkg/xhttp"
@@ -54,7 +54,7 @@ func runServer(cmd *cobra.Command, args []string) {
 		log.Ctx(ctx).Panic().Err(err).Msg("failed to create read model")
 	}
 
-	app := internal.New(contactWriteModel, contactReadModel)
+	app := contacts.New(contactWriteModel, contactReadModel)
 
 	go gqlAPIServer(ctx, app)
 	go httpAPIServer(ctx, app)
@@ -69,7 +69,7 @@ func runServer(cmd *cobra.Command, args []string) {
 	}
 }
 
-func httpAPIServer(ctx context.Context, app *internal.App) {
+func httpAPIServer(ctx context.Context, app *contacts.App) {
 	router := ihttp.New(
 		app,
 		xhttp.GrantAnyFn(),
@@ -82,7 +82,7 @@ func httpAPIServer(ctx context.Context, app *internal.App) {
 	}
 }
 
-func gqlAPIServer(ctx context.Context, app *internal.App) {
+func gqlAPIServer(ctx context.Context, app *contacts.App) {
 	srv := handler.NewDefaultServer(graphql.NewExecutableSchema(graphql.Config{Resolvers: graphql.NewResolver(app)}))
 	root := mux.NewRouter()
 	root.Handle("/query", srv)
@@ -95,7 +95,7 @@ func gqlAPIServer(ctx context.Context, app *internal.App) {
 	}
 }
 
-func grpcServer(ctx context.Context, app *internal.App) {
+func grpcServer(ctx context.Context, app *contacts.App) {
 	listenTo := fmt.Sprintf("%s:%d", cfg.GRPC.Host, cfg.GRPC.Port)
 	listener, err := net.Listen("tcp", listenTo)
 	if err != nil {
