@@ -42,7 +42,7 @@ func NewEvtContactCreated(aggregateId uuid.UUID, aggregateVersion int, createdBy
 func (e EvtContactCreated) Apply(contact *Contact) error {
 	contact.IncrementVersion()
 
-	contact.Id = e.AggregateId()
+	contact.SetAggregateId(e.AggregateId())
 	contact.CreatedAt = e.IssuedAt()
 	contact.UpdatedAt = e.IssuedAt()
 	contact.CreatedBy = e.IssuedBy()

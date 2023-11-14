@@ -15,7 +15,7 @@ type Contact struct {
 
 func fromDomain(c *domain.Contact) *Contact {
 	return &Contact{
-		Id:               c.Id.String(),
+		Id:               c.AggregateId().String(),
 		CreatedAt:        c.CreatedAt.Format("2006-01-02T15:04:05Z"),
 		UpdatedAt:        c.UpdatedAt.Format("2006-01-02T15:04:05Z"),
 		FirstName:        c.FirstName,

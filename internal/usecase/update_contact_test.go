@@ -95,15 +95,15 @@ func testUpdateContact(t *testing.T) {
 			Times(1).
 			Return(
 				&domain.Contact{
-					Id:        uuid,
-					FirstName: cmd.FirstName,
+					AggregateBase: eventsourcing.NewAggregateBase(uuid),
+					FirstName:     cmd.FirstName,
 				},
 				nil,
 			)
 
 		updatedContact, err := contactUpdater.Update(ctx, cmd, cmdIssuer)
 		assert.NoError(t, err)
-		assert.Equal(t, cmd.ContactId, updatedContact.Id.String())
+		assert.Equal(t, cmd.ContactId, updatedContact.AggregateId().String())
 		assert.Equal(t, cmd.FirstName, updatedContact.FirstName)
 	})
 
