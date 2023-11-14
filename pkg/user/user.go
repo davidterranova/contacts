@@ -79,3 +79,17 @@ func (u *User) UnmarshalJSON(data []byte) error {
 func (u User) String() string {
 	return fmt.Sprintf("%s:%s", u.userType, u.id)
 }
+
+func FromString(s string) User {
+	var (
+		userType UserType
+		id       uuid.UUID
+	)
+
+	fmt.Sscanf(s, "%s:%s", &userType, &id)
+
+	return User{
+		id:       id,
+		userType: userType,
+	}
+}
