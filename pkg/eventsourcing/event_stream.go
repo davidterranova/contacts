@@ -35,7 +35,7 @@ func NewInMemoryPublisher[T Aggregate](ctx context.Context, buffer int) *eventSt
 		stream:      make(chan Event[T], buffer),
 		subscribers: make([]SubscribeFn[T], 0),
 	}
-	p.Run()
+	go p.Run()
 
 	return p
 }
@@ -50,7 +50,7 @@ func (p *eventStream[T]) Publish(ctx context.Context, events ...Event[T]) error 
 }
 
 func (p *eventStream[T]) Run() {
-	go func() {
+	func() {
 		for {
 			select {
 			case event := <-p.stream:
