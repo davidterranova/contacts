@@ -49,7 +49,11 @@ func runServer(cmd *cobra.Command, args []string) {
 	// start publishing events
 	go eventStreamPublisher.Run(ctx)
 
-	contactReadModel := ports.NewInMemoryContactList(eventStream)
+	contactReadModel, err := readModel(ctx, cfg.ReadModelDB, eventStream)
+	if err != nil {
+		log.Ctx(ctx).Panic().Err(err).Msg("failed to create read model")
+	}
+
 	app := internal.New(contactWriteModel, contactReadModel)
 
 	go gqlAPIServer(ctx, app)
@@ -128,6 +132,20 @@ func writeModel(ctx context.Context, cfg pg.DBConfig, eventRegistry *eventsourci
 	)
 
 	return contactWriteModel, eventPublisher, nil
+}
+
+func readModel(ctx context.Context, cfg pg.DBConfig, eventStream eventsourcing.EventStream[domain.Contact]) (*ports.PgContactList, error) {
+	// contactReadModel := ports.NewInMemoryContactList(eventStream)
+
+	pg, err := pg.Open(pg.DBConfig{
+		Name:       cfg.Name,
+		ConnString: cfg.ConnString,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return ports.NewPgContactList(pg, eventStream), nil
 }
 
 func init() {
