@@ -80,6 +80,7 @@ func (e *EventBase[T]) SetBase(base EventBase[T]) {
 	e.eventType = base.eventType
 	e.aggregateType = base.aggregateType
 	e.aggregateId = base.aggregateId
+	e.aggregateVersion = base.aggregateVersion
 }
 
 func (e EventBase[T]) String() string {
