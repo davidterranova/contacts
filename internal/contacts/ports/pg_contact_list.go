@@ -148,10 +148,6 @@ func (l *PgContactList) load(id uuid.UUID) (pgContact, error) {
 	return pgC, err
 }
 
-// func (l *PgContactList) update(c pgContact) error {
-// 	return l.db.Save(&c).Error
-// }
-
 func (l *PgContactList) update(id uuid.UUID, fn func(pgC pgContact) pgContact) error {
 	return l.db.Transaction(func(tx *gorm.DB) error {
 		pgC, err := l.load(id)
