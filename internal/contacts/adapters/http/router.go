@@ -10,11 +10,8 @@ import (
 const pathContactId = "contactId"
 
 // New returns a new contacts API router
-func New(app App, authFn xhttp.AuthFn) *mux.Router {
-	root := mux.NewRouter()
-
+func New(root *mux.Router, app App, authFn xhttp.AuthFn) *mux.Router {
 	mountV1Contacts(root, authFn, app)
-	mountPublic(root)
 
 	return root
 }
@@ -34,20 +31,4 @@ func mountV1Contacts(root *mux.Router, authFn xhttp.AuthFn, app App) {
 	v1.HandleFunc("", contactsHandler.Create).Methods(http.MethodPost)
 	v1.HandleFunc("/{"+pathContactId+"}", contactsHandler.Update).Methods(http.MethodPut)
 	v1.HandleFunc("/{"+pathContactId+"}", contactsHandler.Delete).Methods(http.MethodDelete)
-}
-
-func mountPublic(root *mux.Router) {
-	root.HandleFunc("/heartbeat", xhttp.Heartbeat).Methods(http.MethodGet)
-	root.PathPrefix("/openapi/").Handler(
-		http.StripPrefix(
-			"/openapi/",
-			http.FileServer(http.Dir("docs/openapi")),
-		),
-	)
-	root.PathPrefix("/").Handler(
-		http.StripPrefix(
-			"/",
-			http.FileServer(http.Dir("web")),
-		),
-	)
 }

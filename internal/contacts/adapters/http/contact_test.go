@@ -248,7 +248,7 @@ func testContainer(t *testing.T) *container {
 
 	return &container{
 		app:     app,
-		handler: New(app, nil),
+		handler: New(mux.NewRouter(), app, nil),
 	}
 }
 
