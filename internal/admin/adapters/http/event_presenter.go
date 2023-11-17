@@ -3,15 +3,15 @@ package http
 import "github.com/davidterranova/contacts/internal/admin/domain"
 
 type Event struct {
-	EventId          string `json:"eventId"`
-	EventIssuesAt    string `json:"eventIssuesAt"`
-	EventIssuedBy    string `json:"eventIssuedBy"`
-	EventType        string `json:"eventType"`
-	AggregateType    string `json:"aggregateType"`
-	AggregateId      string `json:"aggregateId"`
-	AggregateVersion int    `json:"aggregateVersion"`
-	EventData        string `json:"eventData"`
-	Published        bool   `json:"published"`
+	EventId          string `json:"event_id"`
+	EventIssuesAt    string `json:"event_issues_at"`
+	EventIssuedBy    string `json:"event_issued_by"`
+	EventType        string `json:"event_type"`
+	AggregateType    string `json:"aggregate_type"`
+	AggregateId      string `json:"aggregate_id"`
+	AggregateVersion int    `json:"aggregate_version"`
+	EventData        string `json:"event_data"`
+	Published        bool   `json:"event_published"`
 }
 
 func fromDomainList(events []*domain.Event) []*Event {
