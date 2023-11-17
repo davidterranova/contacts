@@ -43,7 +43,7 @@ func (h UpdateContact) Update(ctx context.Context, cmd CmdUpdateContact, cmdIssu
 	}
 
 	checkedCmd := newCmdUpdateContact(uuid, cmd, cmdIssuedBy)
-	return handleErrs(h.commandHandler.Handle(ctx, checkedCmd))
+	return handleErrs(h.commandHandler.HandleCommand(ctx, checkedCmd))
 }
 
 type cmdUpdateContact struct {

@@ -39,7 +39,7 @@ func (h DeleteContactHandler) Delete(ctx context.Context, cmd CmdDeleteContact, 
 		return fmt.Errorf("%w: %s", ErrInvalidCommand, err)
 	}
 
-	_, err = h.commandHandler.Handle(ctx, newCmdDeleteContact(uuid, cmdIssuedBy))
+	_, err = h.commandHandler.HandleCommand(ctx, newCmdDeleteContact(uuid, cmdIssuedBy))
 	switch {
 	case errors.Is(err, ErrNotFound):
 		return err
