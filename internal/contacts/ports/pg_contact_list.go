@@ -120,11 +120,21 @@ func (l *PgContactList) HandleEvent(e eventsourcing.Event[domain.Contact]) {
 func (l *PgContactList) List(ctx context.Context, query usecase.QueryListContact) ([]*domain.Contact, error) {
 	var pgContacts []pgContact
 
-	err := l.db.WithContext(ctx).
-		Find(&pgContacts).
-		Where("created_by = ?", query.User.Id().String()).
+	issuedBy := func(by *user.User) func(db *gorm.DB) *gorm.DB {
+		return func(db *gorm.DB) *gorm.DB {
+			if by == nil {
+				return db
+			}
+
+			return db.Where("created_by = ?", by.String())
+		}
+	}
+
+	err := l.db.
+		WithContext(ctx).
+		Scopes(issuedBy(query.User)).
 		Order("created_at DESC").
-		Error
+		Find(&pgContacts).Error
 	if err != nil {
 		return nil, err
 	}

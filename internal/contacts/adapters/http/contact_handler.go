@@ -43,7 +43,7 @@ func (h *ContactHandler) List(w http.ResponseWriter, r *http.Request) {
 	}
 
 	contacts, err := h.app.ListContacts(ctx, usecase.QueryListContact{
-		User: user,
+		User: &user,
 	})
 	if err != nil {
 		log.Ctx(ctx).Warn().Err(err).Msg("user_contacts:list failed to list contacts")

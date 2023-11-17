@@ -37,7 +37,7 @@ func (h *Handler) ListContacts(ctx context.Context, req *ListContactsRequest) (*
 	}
 
 	contacts, err := h.app.ListContacts(ctx, usecase.QueryListContact{
-		User: user,
+		User: &user,
 	})
 	if err != nil {
 		return nil, err

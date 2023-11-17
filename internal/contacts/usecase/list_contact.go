@@ -8,7 +8,7 @@ import (
 )
 
 type QueryListContact struct {
-	User user.User
+	User *user.User
 }
 
 type ListContactHandler struct {
