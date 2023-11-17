@@ -108,6 +108,10 @@ func (s *pgEventStore[T]) LoadUnpublished(ctx context.Context, batchSize int) ([
 		return nil, fmt.Errorf("failed to load unpublished events from outbox: %w", err)
 	}
 
+	if len(pgOutboxEntries) == 0 {
+		return nil, nil
+	}
+
 	var unpublishedEvents []pgEvent
 	err = s.db.WithContext(ctx).Where("event_id IN ?", pgOutboxEntries).Find(&unpublishedEvents).Error
 	if err != nil {
