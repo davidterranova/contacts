@@ -1,1 +1,1 @@
-../../internal/admin/adapters/http/openapi/events.v1.oas.yaml
+../../../cqrs/admin/adapters/http/openapi/events.v1.oas.yaml

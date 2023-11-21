@@ -19,6 +19,8 @@ paths:
       tags:
         - contacts
       summary: List all contacts
+      security:
+        - basicAuth: []
       responses:
         "200":
           description: "List all contacts"
@@ -39,6 +41,8 @@ paths:
       tags:
         - contacts
       summary: Create a new contact
+      security:
+        - basicAuth: []
       requestBody:
         description: Contact object that needs to be added
         required: true
@@ -86,6 +90,8 @@ paths:
       tags:
         - contacts
       summary: Update an existing contact
+      security:
+        - basicAuth: []
       parameters:
         - $ref: "#/components/parameters/contactId"
       requestBody:
@@ -140,6 +146,8 @@ paths:
       tags:
         - contacts
       summary: Delete an existing contact
+      security:
+        - basicAuth: []
       parameters:
         - $ref: "#/components/parameters/contactId"
       responses:
@@ -189,6 +197,9 @@ components:
         id:
           type: string
           format: uuid
+        created_by:
+          type: string
+          format: uuid
         first_name:
           type: string
           example: "John"
@@ -209,3 +220,16 @@ components:
         updated_at:
           type: string
           format: date-time
+        version:
+          type: integer
+          description: "version number of the contact aggregate"
+          example: 1
+
+  securitySchemes:
+    # bearerAuth:
+    #   type: http
+    #   scheme: bearer
+    #   bearerFormat: JWT
+    basicAuth:
+      type: http
+      scheme: basic

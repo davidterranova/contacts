@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/davidterranova/contacts/internal/contacts/domain"
-	"github.com/davidterranova/contacts/pkg/eventsourcing"
+	"github.com/davidterranova/cqrs/eventsourcing"
 )
 
 var (

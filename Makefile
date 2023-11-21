@@ -19,6 +19,9 @@ BUILD_FLAGS=-a
 GRPC_DST_DIR=.
 GRPC_SRC_DIR=./internal/adapters/grpc
 
+include .env
+export $(shell sed 's/=.*//' .env)
+
 .PHONY: build
 build: clean prepare
 	$(BUILD_ENV) $(GOOS) $(GOBUILD) $(BUILD_FLAGS) $(LDFLAGS) -o $(TARGET_DIR)/$(BINARY) .
@@ -70,3 +73,8 @@ migrate-up:
 .PHONY: migrate-down
 migrate-down:
 	go run main.go dbmigrate down --target eventstore
+
+env:
+# export $(cat env) xargs
+	env | grep CONTACT
+

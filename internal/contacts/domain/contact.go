@@ -3,8 +3,8 @@ package domain
 import (
 	"time"
 
-	"github.com/davidterranova/contacts/pkg/eventsourcing"
-	"github.com/davidterranova/contacts/pkg/user"
+	"github.com/davidterranova/cqrs/eventsourcing"
+	"github.com/davidterranova/cqrs/user"
 	"github.com/google/uuid"
 )
 
@@ -28,7 +28,7 @@ func New() *Contact {
 	now := time.Now().UTC()
 
 	return &Contact{
-		AggregateBase: eventsourcing.NewAggregateBase[Contact](uuid.Nil),
+		AggregateBase: eventsourcing.NewAggregateBase[Contact](uuid.Nil, 0),
 		CreatedAt:     now,
 		UpdatedAt:     now,
 	}

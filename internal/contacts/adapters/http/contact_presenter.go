@@ -10,7 +10,7 @@ type Contact struct {
 	LastName         string `json:"last_name"`
 	Email            string `json:"email"`
 	Phone            string `json:"phone"`
-	AggregateVersion int    `json:"aggregate_version"`
+	AggregateVersion int    `json:"version"`
 }
 
 func fromDomain(c *domain.Contact) *Contact {

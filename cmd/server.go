@@ -10,24 +10,34 @@ import (
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
-	"github.com/davidterranova/contacts/internal/admin"
-	adminPorts "github.com/davidterranova/contacts/internal/admin/ports"
 	"github.com/davidterranova/contacts/internal/contacts"
 	"github.com/davidterranova/contacts/internal/contacts/adapters/graphql"
 	lgrpc "github.com/davidterranova/contacts/internal/contacts/adapters/grpc"
+	contactsHttp "github.com/davidterranova/contacts/internal/contacts/adapters/http"
 	"github.com/davidterranova/contacts/internal/contacts/domain"
 	contactsPorts "github.com/davidterranova/contacts/internal/contacts/ports"
-
-	adminHttp "github.com/davidterranova/contacts/internal/admin/adapters/http"
-	contactsHttp "github.com/davidterranova/contacts/internal/contacts/adapters/http"
-	"github.com/davidterranova/contacts/pkg/eventsourcing"
-	"github.com/davidterranova/contacts/pkg/pg"
 	"github.com/davidterranova/contacts/pkg/xhttp"
+	"github.com/davidterranova/cqrs/admin"
+	adminHttp "github.com/davidterranova/cqrs/admin/adapters/http"
+	"github.com/davidterranova/cqrs/eventsourcing"
+	"github.com/davidterranova/cqrs/eventsourcing/eventrepository"
+	"github.com/davidterranova/cqrs/eventsourcing/eventstream"
+	"github.com/davidterranova/cqrs/pg"
 	"github.com/gorilla/mux"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 )
+
+type contactContainer struct {
+	eventRegistry        eventsourcing.EventRegistry[domain.Contact]
+	eventRepository      eventsourcing.EventRepository[domain.Contact]
+	eventSubscriber      eventsourcing.Subscriber[domain.Contact]
+	eventPublisher       eventsourcing.Publisher[domain.Contact]
+	eventStreamPublisher *eventsourcing.EventStreamPublisher[domain.Contact]
+	eventStore           eventsourcing.EventStore[domain.Contact]
+	contactFactory       func() *domain.Contact
+}
 
 var serverCmd = &cobra.Command{
 	Use:    "server",
@@ -40,12 +50,17 @@ func runServer(cmd *cobra.Command, args []string) {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer cancel()
 
-	contactsApp, err := contactsApp(ctx, cfg)
+	contactContainer, err := newContactContainer(ctx, cfg)
+	if err != nil {
+		log.Ctx(ctx).Panic().Err(err).Msg("failed to create contact container")
+	}
+
+	contactsApp, err := contactsApp(ctx, contactContainer, cfg)
 	if err != nil {
 		log.Ctx(ctx).Panic().Err(err).Msg("failed to create contacts app")
 	}
 
-	adminApp, err := adminApp(ctx, cfg)
+	adminApp, err := adminApp(ctx, contactContainer)
 	if err != nil {
 		log.Ctx(ctx).Panic().Err(err).Msg("failed to create admin app")
 	}
@@ -63,17 +78,16 @@ func runServer(cmd *cobra.Command, args []string) {
 	}
 }
 
-func httpAPIServer(ctx context.Context, contactsApp *contacts.App, adminApp *admin.App) {
+func httpAPIServer(ctx context.Context, contactsApp *contacts.App, adminApp *admin.App[domain.Contact]) {
 	router := mux.NewRouter()
 	router = contactsHttp.New(
 		router,
 		contactsApp,
 		xhttp.GrantAnyFn(),
 	)
-	router = adminHttp.New(
+	router = adminHttp.New[domain.Contact](
 		router,
 		adminApp,
-		nil,
 	)
 
 	xhttp.MountStatic(router, "/openapi/", "docs/openapi")
@@ -116,20 +130,67 @@ func grpcServer(ctx context.Context, app *contacts.App) {
 	}
 }
 
-func contactsApp(ctx context.Context, cfg Config) (*contacts.App, error) {
-	eventRegistry := eventsourcing.NewRegistry[domain.Contact]()
-	domain.RegisterEvents(eventRegistry)
+func newContactContainer(ctx context.Context, cfg Config) (*contactContainer, error) {
+	container := &contactContainer{}
 
-	eventStream := eventsourcing.NewInMemoryPublisher[domain.Contact](context.Background(), 100)
-	contactWriteModel, eventStreamPublisher, err := contactsWriteModel(ctx, cfg.EventStoreDB, eventRegistry, eventStream)
+	pg, err := pg.Open(pg.DBConfig{
+		Name:       cfg.EventStoreDB.Name,
+		ConnString: cfg.EventStoreDB.ConnString,
+	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to create write model: %w", err)
+		return nil, err
 	}
 
-	// start publishing events
-	go eventStreamPublisher.Run(ctx)
+	container.contactFactory = func() *domain.Contact {
+		return domain.New()
+	}
 
-	contactReadModel, err := contactsReadModel(ctx, cfg.ReadModelDB, eventStream)
+	// event registry
+	container.eventRegistry = eventsourcing.NewEventRegistry[domain.Contact]()
+	domain.RegisterEvents(container.eventRegistry)
+
+	// event repository
+	container.eventRepository = eventrepository.NewPGEventRepository[domain.Contact](
+		pg,
+		container.eventRegistry,
+	)
+
+	// event stream
+	pubSub := eventstream.NewInMemoryPubSub[domain.Contact](ctx, 100)
+	container.eventSubscriber = pubSub
+	container.eventPublisher = pubSub
+
+	container.eventStreamPublisher = eventsourcing.NewEventStreamPublisher[domain.Contact](
+		container.eventRepository,
+		container.eventPublisher,
+		100,
+	)
+
+	// event store
+	withOutbox := true
+	container.eventStore = eventsourcing.NewEventStore[domain.Contact](
+		container.eventRepository,
+		container.eventRegistry,
+		withOutbox,
+	)
+
+	// start publishing events
+	go container.eventStreamPublisher.Run(ctx)
+
+	return container, nil
+}
+
+func contactsApp(ctx context.Context, container *contactContainer, cfg Config) (*contacts.App, error) {
+	contactWriteModel := eventsourcing.NewCommandHandler[domain.Contact](
+		container.eventStore,
+		container.contactFactory,
+	)
+
+	contactReadModel, err := contactsReadModel(
+		ctx,
+		cfg.ReadModelDB,
+		container.eventSubscriber,
+	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create contacts read model: %w", err)
 	}
@@ -137,30 +198,7 @@ func contactsApp(ctx context.Context, cfg Config) (*contacts.App, error) {
 	return contacts.New(contactWriteModel, contactReadModel), nil
 }
 
-func contactsWriteModel(ctx context.Context, cfg pg.DBConfig, eventRegistry *eventsourcing.EventRegistry[domain.Contact], eventStream eventsourcing.EventStream[domain.Contact]) (eventsourcing.CommandHandler[domain.Contact], *eventsourcing.EventStreamPublisher[domain.Contact], error) {
-	// eventStore := eventsourcing.NewInMemoryEventStore[domain.Contact]()
-	pg, err := pg.Open(pg.DBConfig{
-		Name:       cfg.Name,
-		ConnString: cfg.ConnString,
-	})
-	if err != nil {
-		return nil, nil, err
-	}
-
-	eventStore := eventsourcing.NewPGEventStore[domain.Contact](pg, eventRegistry)
-	eventPublisher := eventsourcing.NewEventStreamPublisher[domain.Contact](eventStore, eventStream, 10)
-
-	contactWriteModel := eventsourcing.NewCommandHandler[domain.Contact](
-		eventStore,
-		func() *domain.Contact {
-			return domain.New()
-		},
-	)
-
-	return contactWriteModel, eventPublisher, nil
-}
-
-func contactsReadModel(ctx context.Context, cfg pg.DBConfig, eventStream eventsourcing.EventStream[domain.Contact]) (*contactsPorts.PgContactList, error) {
+func contactsReadModel(ctx context.Context, cfg pg.DBConfig, eventStreamSubscriber eventsourcing.Subscriber[domain.Contact]) (*contactsPorts.PgContactList, error) {
 	// contactReadModel := ports.NewInMemoryContactList(eventStream)
 	pg, err := pg.Open(pg.DBConfig{
 		Name:       cfg.Name,
@@ -170,28 +208,18 @@ func contactsReadModel(ctx context.Context, cfg pg.DBConfig, eventStream eventso
 		return nil, err
 	}
 
-	return contactsPorts.NewPgContactList(pg, eventStream), nil
+	return contactsPorts.NewPgContactList(pg, eventStreamSubscriber), nil
 }
 
-func adminApp(ctx context.Context, cfg Config) (*admin.App, error) {
-	adminReadModel, err := adminReadModel(ctx, cfg.EventStoreDB)
-	if err != nil {
-		log.Ctx(ctx).Panic().Err(err).Msg("failed to create admin read model")
-	}
+func adminApp(ctx context.Context, container *contactContainer) (*admin.App[domain.Contact], error) {
+	app := admin.NewApp[domain.Contact](
+		container.eventRepository,
+		container.eventRegistry,
+		domain.AggregateContact,
+		container.contactFactory,
+	)
 
-	return admin.New(adminReadModel), nil
-}
-
-func adminReadModel(ctx context.Context, cfg pg.DBConfig) (*adminPorts.PgListEvent, error) {
-	pg, err := pg.Open(pg.DBConfig{
-		Name:       cfg.Name,
-		ConnString: cfg.ConnString,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	return adminPorts.NewPgListEvent(pg), nil
+	return app, nil
 }
 
 func init() {

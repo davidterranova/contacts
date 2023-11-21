@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	"github.com/davidterranova/contacts/internal/contacts/domain"
-	"github.com/davidterranova/contacts/pkg/eventsourcing"
 	"github.com/davidterranova/contacts/pkg/user"
+	"github.com/davidterranova/cqrs/eventsourcing"
 	uuid "github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
@@ -66,7 +66,7 @@ func testUpdateContactValidation(t *testing.T) {
 
 			if tc.expectedError == nil {
 				container.contactCmdHandler.EXPECT().
-					Handle(ctx, gomock.Any()).
+					HandleCommand(ctx, gomock.Any()).
 					Times(1).
 					Return(nil, nil)
 			}
@@ -91,11 +91,11 @@ func testUpdateContact(t *testing.T) {
 		}
 
 		container.contactCmdHandler.EXPECT().
-			Handle(ctx, gomock.Any()).
+			HandleCommand(ctx, gomock.Any()).
 			Times(1).
 			Return(
 				&domain.Contact{
-					AggregateBase: eventsourcing.NewAggregateBase[domain.Contact](uuid),
+					AggregateBase: eventsourcing.NewAggregateBase[domain.Contact](uuid, 2),
 					FirstName:     cmd.FirstName,
 				},
 				nil,
@@ -114,7 +114,7 @@ func testUpdateContact(t *testing.T) {
 		}
 
 		container.contactCmdHandler.EXPECT().
-			Handle(ctx, gomock.Any()).
+			HandleCommand(ctx, gomock.Any()).
 			Times(1).
 			Return(
 				nil,
@@ -133,7 +133,7 @@ func testUpdateContact(t *testing.T) {
 		}
 
 		container.contactCmdHandler.EXPECT().
-			Handle(ctx, gomock.Any()).
+			HandleCommand(ctx, gomock.Any()).
 			Times(1).
 			Return(
 				nil,
@@ -153,7 +153,7 @@ func testUpdateContact(t *testing.T) {
 		cmdWrongIssuer := user.New(uuid.New())
 
 		container.contactCmdHandler.EXPECT().
-			Handle(ctx, gomock.Any()).
+			HandleCommand(ctx, gomock.Any()).
 			Times(1).
 			Return(
 				nil,

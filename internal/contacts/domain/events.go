@@ -1,9 +1,9 @@
 package domain
 
 import (
-	"github.com/davidterranova/contacts/pkg/user"
+	"github.com/davidterranova/cqrs/user"
 
-	"github.com/davidterranova/contacts/pkg/eventsourcing"
+	"github.com/davidterranova/cqrs/eventsourcing"
 	"github.com/google/uuid"
 )
 
@@ -15,7 +15,7 @@ const (
 	ContactDeleted      = "deleted"
 )
 
-func RegisterEvents(registry *eventsourcing.EventRegistry[Contact]) {
+func RegisterEvents(registry eventsourcing.EventRegistry[Contact]) {
 	registry.Register(ContactCreated, func() eventsourcing.Event[Contact] {
 		return &EvtContactCreated{
 			EventBase: &eventsourcing.EventBase[Contact]{},

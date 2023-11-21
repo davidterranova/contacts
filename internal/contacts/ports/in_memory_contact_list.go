@@ -6,7 +6,7 @@ import (
 
 	"github.com/davidterranova/contacts/internal/contacts/domain"
 	"github.com/davidterranova/contacts/internal/contacts/usecase"
-	"github.com/davidterranova/contacts/pkg/eventsourcing"
+	"github.com/davidterranova/cqrs/eventsourcing"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 )

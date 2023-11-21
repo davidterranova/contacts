@@ -89,7 +89,7 @@ func (r *queryResolver) ListContacts(ctx context.Context) ([]*model.Contact, err
 	}
 
 	contacts, err := r.app.ListContacts(ctx, usecase.QueryListContact{
-		User: &user,
+		User: user,
 	})
 	if err != nil {
 		return nil, err

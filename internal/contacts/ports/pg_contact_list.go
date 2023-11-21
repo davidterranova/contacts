@@ -7,8 +7,8 @@ import (
 
 	"github.com/davidterranova/contacts/internal/contacts/domain"
 	"github.com/davidterranova/contacts/internal/contacts/usecase"
-	"github.com/davidterranova/contacts/pkg/eventsourcing"
 	"github.com/davidterranova/contacts/pkg/user"
+	"github.com/davidterranova/cqrs/eventsourcing"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 	"gorm.io/gorm"
@@ -36,11 +36,11 @@ func (pgContact) TableName() string {
 	return "contacts"
 }
 
-func NewPgContactList(db *gorm.DB, eventStream eventsourcing.Subscriber[domain.Contact]) *PgContactList {
+func NewPgContactList(db *gorm.DB, eventStreamSubscriber eventsourcing.Subscriber[domain.Contact]) *PgContactList {
 	pgContactList := &PgContactList{
 		db: db,
 	}
-	eventStream.Subscribe(context.Background(), pgContactList.HandleEvent)
+	eventStreamSubscriber.Subscribe(context.Background(), pgContactList.HandleEvent)
 
 	return pgContactList
 }
@@ -120,7 +120,7 @@ func (l *PgContactList) HandleEvent(e eventsourcing.Event[domain.Contact]) {
 func (l *PgContactList) List(ctx context.Context, query usecase.QueryListContact) ([]*domain.Contact, error) {
 	var pgContacts []pgContact
 
-	issuedBy := func(by *user.User) func(db *gorm.DB) *gorm.DB {
+	issuedBy := func(by user.User) func(db *gorm.DB) *gorm.DB {
 		return func(db *gorm.DB) *gorm.DB {
 			if by == nil {
 				return db
@@ -131,6 +131,7 @@ func (l *PgContactList) List(ctx context.Context, query usecase.QueryListContact
 	}
 
 	err := l.db.
+		Debug().
 		WithContext(ctx).
 		Scopes(issuedBy(query.User)).
 		Order("created_at DESC").
@@ -141,7 +142,12 @@ func (l *PgContactList) List(ctx context.Context, query usecase.QueryListContact
 
 	contacts := make([]*domain.Contact, 0, len(pgContacts))
 	for _, pgContact := range pgContacts {
-		contacts = append(contacts, fromPgContact(pgContact))
+		contact, err := fromPgContact(pgContact)
+		if err != nil {
+			return nil, err
+		}
+
+		contacts = append(contacts, contact)
 	}
 
 	return contacts, nil
@@ -175,16 +181,25 @@ func (l *PgContactList) delete(id uuid.UUID) error {
 	return l.db.Delete(&pgContact{}, id).Error
 }
 
-func fromPgContact(pg pgContact) *domain.Contact {
-	return &domain.Contact{
-		AggregateBase: eventsourcing.NewAggregateBase[domain.Contact](pg.Id),
-		CreatedAt:     pg.CreatedAt,
-		UpdatedAt:     pg.UpdatedAt,
-		DeletedAt:     pg.DeletedAt,
-		CreatedBy:     user.FromString(pg.CreatedBy),
-		FirstName:     pg.FirstName,
-		LastName:      pg.LastName,
-		Email:         pg.Email,
-		Phone:         pg.Phone,
+func fromPgContact(pg pgContact) (*domain.Contact, error) {
+	user := user.New(uuid.Nil)
+	err := user.FromString(pg.CreatedBy)
+	if err != nil {
+		return nil, err
 	}
+
+	return &domain.Contact{
+		AggregateBase: eventsourcing.NewAggregateBase[domain.Contact](
+			pg.Id,
+			pg.AggregateVersion,
+		),
+		CreatedAt: pg.CreatedAt,
+		UpdatedAt: pg.UpdatedAt,
+		DeletedAt: pg.DeletedAt,
+		CreatedBy: user,
+		FirstName: pg.FirstName,
+		LastName:  pg.LastName,
+		Email:     pg.Email,
+		Phone:     pg.Phone,
+	}, nil
 }

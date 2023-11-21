@@ -6,8 +6,8 @@ import (
 	"fmt"
 
 	"github.com/davidterranova/contacts/internal/contacts/domain"
-	"github.com/davidterranova/contacts/pkg/eventsourcing"
 	"github.com/davidterranova/contacts/pkg/user"
+	"github.com/davidterranova/cqrs/eventsourcing"
 	"github.com/go-playground/validator"
 	uuid "github.com/google/uuid"
 )
