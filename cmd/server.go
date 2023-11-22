@@ -31,7 +31,7 @@ import (
 
 type contactContainer struct {
 	eventRegistry        eventsourcing.EventRegistry[domain.Contact]
-	eventRepository      eventsourcing.EventRepository[domain.Contact]
+	eventRepository      eventsourcing.EventRepository
 	eventSubscriber      eventsourcing.Subscriber[domain.Contact]
 	eventPublisher       eventsourcing.Publisher[domain.Contact]
 	eventStreamPublisher *eventsourcing.EventStreamPublisher[domain.Contact]
@@ -150,10 +150,7 @@ func newContactContainer(ctx context.Context, cfg Config) (*contactContainer, er
 	domain.RegisterEvents(container.eventRegistry)
 
 	// event repository
-	container.eventRepository = eventrepository.NewPGEventRepository[domain.Contact](
-		pg,
-		container.eventRegistry,
-	)
+	container.eventRepository = eventrepository.NewPGEventRepository(pg)
 
 	// event stream
 	pubSub := eventstream.NewInMemoryPubSub[domain.Contact](ctx, 100)
@@ -162,6 +159,7 @@ func newContactContainer(ctx context.Context, cfg Config) (*contactContainer, er
 
 	container.eventStreamPublisher = eventsourcing.NewEventStreamPublisher[domain.Contact](
 		container.eventRepository,
+		container.eventRegistry,
 		container.eventPublisher,
 		100,
 	)
