@@ -154,7 +154,7 @@ func (l *PgContactList) List(ctx context.Context, query usecase.QueryListContact
 }
 
 func (l *PgContactList) create(c pgContact) error {
-	return l.db.Create(&c).Error
+	return l.db.FirstOrCreate(&c).Error
 }
 
 func (l *PgContactList) load(id uuid.UUID) (pgContact, error) {
