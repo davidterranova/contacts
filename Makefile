@@ -9,7 +9,7 @@ BUILDTIME ?= $(shell date -u +%FT%T)
 
 DOCKER_COMPOSE_CMD=docker-compose -p contacts
 
-LINT ?= golangci-lint
+LINT = golangci-lint
 
 # build flags
 BUILD_ENV=GOARCH=amd64 CGO_ENABLED=0
