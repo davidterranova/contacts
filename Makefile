@@ -17,7 +17,7 @@ LDFLAGS=-ldflags='-w -s -X github.com/davidterranova/contacts/cmd.Version=${VERS
 BUILD_FLAGS=-a
 
 GRPC_DST_DIR=.
-GRPC_SRC_DIR=./internal/adapters/grpc
+GRPC_SRC_DIR=./internal/contacts/adapters/grpc
 
 include .env
 export $(shell sed 's/=.*//' .env)

@@ -29,5 +29,6 @@ type Mutation {
 
 type Query {
   listContacts: [Contact!]!
+  exportContact: Bytes!
 }
 

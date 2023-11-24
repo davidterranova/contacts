@@ -7,20 +7,18 @@ import (
 	"github.com/davidterranova/contacts/pkg/user"
 )
 
-type QueryListContact struct {
-	User user.User
-}
-
 type ListContactHandler struct {
-	lister ContactLister
+	lister ContactReadModel
 }
 
-func NewListContact(lister ContactLister) ListContactHandler {
+func NewListContact(lister ContactReadModel) ListContactHandler {
 	return ListContactHandler{
 		lister: lister,
 	}
 }
 
-func (h ListContactHandler) List(ctx context.Context, query QueryListContact) ([]*domain.Contact, error) {
-	return h.lister.List(ctx, query)
+func (h ListContactHandler) List(ctx context.Context, cmdIssuedBy user.User) ([]*domain.Contact, error) {
+	return h.lister.List(ctx, QueryContact{
+		Requestor: cmdIssuedBy,
+	})
 }

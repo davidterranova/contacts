@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.2.0
 // - protoc             v4.23.4
-// source: internal/adapters/grpc/contacts.proto
+// source: internal/contacts/adapters/grpc/contacts.proto
 
 package grpc
 
@@ -23,6 +23,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ContactsClient interface {
 	ListContacts(ctx context.Context, in *ListContactsRequest, opts ...grpc.CallOption) (*ListContactsResponse, error)
+	ExportContact(ctx context.Context, in *ExportContactRequest, opts ...grpc.CallOption) (*ExportContactResponse, error)
 	CreateContact(ctx context.Context, in *CreateContactRequest, opts ...grpc.CallOption) (*CreateContactResponse, error)
 	DeleteContact(ctx context.Context, in *DeleteContactRequest, opts ...grpc.CallOption) (*DeleteContactResponse, error)
 	UpdateContact(ctx context.Context, in *UpdateContactRequest, opts ...grpc.CallOption) (*UpdateContactResponse, error)
@@ -39,6 +40,15 @@ func NewContactsClient(cc grpc.ClientConnInterface) ContactsClient {
 func (c *contactsClient) ListContacts(ctx context.Context, in *ListContactsRequest, opts ...grpc.CallOption) (*ListContactsResponse, error) {
 	out := new(ListContactsResponse)
 	err := c.cc.Invoke(ctx, "/grpc.Contacts/ListContacts", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *contactsClient) ExportContact(ctx context.Context, in *ExportContactRequest, opts ...grpc.CallOption) (*ExportContactResponse, error) {
+	out := new(ExportContactResponse)
+	err := c.cc.Invoke(ctx, "/grpc.Contacts/ExportContact", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -77,6 +87,7 @@ func (c *contactsClient) UpdateContact(ctx context.Context, in *UpdateContactReq
 // for forward compatibility
 type ContactsServer interface {
 	ListContacts(context.Context, *ListContactsRequest) (*ListContactsResponse, error)
+	ExportContact(context.Context, *ExportContactRequest) (*ExportContactResponse, error)
 	CreateContact(context.Context, *CreateContactRequest) (*CreateContactResponse, error)
 	DeleteContact(context.Context, *DeleteContactRequest) (*DeleteContactResponse, error)
 	UpdateContact(context.Context, *UpdateContactRequest) (*UpdateContactResponse, error)
@@ -89,6 +100,9 @@ type UnimplementedContactsServer struct {
 
 func (UnimplementedContactsServer) ListContacts(context.Context, *ListContactsRequest) (*ListContactsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListContacts not implemented")
+}
+func (UnimplementedContactsServer) ExportContact(context.Context, *ExportContactRequest) (*ExportContactResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ExportContact not implemented")
 }
 func (UnimplementedContactsServer) CreateContact(context.Context, *CreateContactRequest) (*CreateContactResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateContact not implemented")
@@ -126,6 +140,24 @@ func _Contacts_ListContacts_Handler(srv interface{}, ctx context.Context, dec fu
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ContactsServer).ListContacts(ctx, req.(*ListContactsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Contacts_ExportContact_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ExportContactRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ContactsServer).ExportContact(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/grpc.Contacts/ExportContact",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ContactsServer).ExportContact(ctx, req.(*ExportContactRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -196,6 +228,10 @@ var Contacts_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Contacts_ListContacts_Handler,
 		},
 		{
+			MethodName: "ExportContact",
+			Handler:    _Contacts_ExportContact_Handler,
+		},
+		{
 			MethodName: "CreateContact",
 			Handler:    _Contacts_CreateContact_Handler,
 		},
@@ -209,5 +245,5 @@ var Contacts_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "internal/adapters/grpc/contacts.proto",
+	Metadata: "internal/contacts/adapters/grpc/contacts.proto",
 }

@@ -5,6 +5,7 @@ import (
 	"context"
 
 	"github.com/davidterranova/contacts/internal/contacts/domain"
+	"github.com/davidterranova/contacts/pkg/user"
 	"github.com/davidterranova/cqrs/eventsourcing"
 	uuid "github.com/google/uuid"
 	_ "go.uber.org/mock/mockgen/model"
@@ -28,6 +29,12 @@ type ContactCmdHandler interface {
 	HydrateAggregate(ctx context.Context, aggregateType eventsourcing.AggregateType, aggregateId uuid.UUID) (*domain.Contact, error)
 }
 
-type ContactLister interface {
-	List(ctx context.Context, query QueryListContact) ([]*domain.Contact, error)
+type QueryContact struct {
+	Requestor user.User
+	ContactId *uuid.UUID
+}
+
+type ContactReadModel interface {
+	List(ctx context.Context, query QueryContact) ([]*domain.Contact, error)
+	Get(ctx context.Context, query QueryContact) (*domain.Contact, error)
 }

@@ -17,7 +17,7 @@ var (
 
 func handleErrs(contact *domain.Contact, err error) (*domain.Contact, error) {
 	switch {
-	case errors.Is(err, eventsourcing.ErrAggregateNotFound):
+	case errors.Is(err, eventsourcing.ErrAggregateNotFound), errors.Is(err, ErrNotFound):
 		return nil, fmt.Errorf("%w: %s", ErrNotFound, err)
 	case errors.Is(err, ErrForbidden):
 		return nil, err

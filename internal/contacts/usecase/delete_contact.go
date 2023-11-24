@@ -2,7 +2,6 @@ package usecase
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/davidterranova/contacts/internal/contacts/domain"
@@ -39,17 +38,14 @@ func (h DeleteContactHandler) Delete(ctx context.Context, cmd CmdDeleteContact, 
 		return fmt.Errorf("%w: %s", ErrInvalidCommand, err)
 	}
 
-	_, err = h.commandHandler.HandleCommand(ctx, newCmdDeleteContact(uuid, cmdIssuedBy))
-	switch {
-	case errors.Is(err, ErrNotFound):
-		return err
-	case errors.Is(err, eventsourcing.ErrAggregateNotFound):
-		return fmt.Errorf("%w: %s", ErrInvalidCommand, err)
-	case err != nil:
-		return fmt.Errorf("%w: %s", ErrInternal, err)
-	default:
-		return nil
-	}
+	_, err = handleErrs(
+		h.commandHandler.HandleCommand(
+			ctx,
+			newCmdDeleteContact(uuid, cmdIssuedBy),
+		),
+	)
+
+	return err
 }
 
 type cmdDeleteContact struct {

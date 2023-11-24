@@ -59,13 +59,36 @@ func (l *InMemoryContactList) HandleEvent(e eventsourcing.Event[domain.Contact])
 	l.contacts[e.AggregateId()] = c
 }
 
-func (l *InMemoryContactList) List(_ context.Context, query usecase.QueryListContact) ([]*domain.Contact, error) {
+func (l *InMemoryContactList) List(_ context.Context, query usecase.QueryContact) ([]*domain.Contact, error) {
 	contacts := make([]*domain.Contact, 0, len(l.contacts))
 	for _, contact := range l.contacts {
-		if contact.CreatedBy.Id() == query.User.Id() {
+		if l.matchQuery(contact, query) {
 			contacts = append(contacts, contact)
 		}
 	}
 
 	return contacts, nil
+}
+
+func (l *InMemoryContactList) Get(_ context.Context, query usecase.QueryContact) (*domain.Contact, error) {
+	for _, contact := range l.contacts {
+		if l.matchQuery(contact, query) {
+			return contact, nil
+		}
+	}
+
+	return nil, ErrNotFound
+}
+
+func (l *InMemoryContactList) matchQuery(contact *domain.Contact, query usecase.QueryContact) bool {
+	toAdd := true
+	if contact.CreatedBy.Id() != query.Requestor.Id() {
+		toAdd = false
+	}
+
+	if query.ContactId != nil && contact.AggregateId() != *query.ContactId {
+		toAdd = false
+	}
+
+	return toAdd
 }

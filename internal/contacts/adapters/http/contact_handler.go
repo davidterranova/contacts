@@ -5,6 +5,8 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"io"
 	"net/http"
 
 	"github.com/davidterranova/contacts/internal/contacts/domain"
@@ -17,7 +19,8 @@ import (
 )
 
 type App interface {
-	ListContacts(ctx context.Context, query usecase.QueryListContact) ([]*domain.Contact, error)
+	ListContacts(ctx context.Context, cmdIssuedBy user.User) ([]*domain.Contact, error)
+	ExportContact(ctx context.Context, cmd usecase.CmdExportContact, cmdIssuedBy user.User) (io.Writer, error)
 	CreateContact(ctx context.Context, cmd usecase.CmdCreateContact, cmdIssuedBy user.User) (*domain.Contact, error)
 	UpdateContact(ctx context.Context, cmd usecase.CmdUpdateContact, cmdIssuedBy user.User) (*domain.Contact, error)
 	DeleteContact(ctx context.Context, cmd usecase.CmdDeleteContact, cmdIssuedBy user.User) error
@@ -42,9 +45,7 @@ func (h *ContactHandler) List(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	contacts, err := h.app.ListContacts(ctx, usecase.QueryListContact{
-		User: user,
-	})
+	contacts, err := h.app.ListContacts(ctx, user)
 	if err != nil {
 		log.Ctx(ctx).Warn().Err(err).Msg("user_contacts:list failed to list contacts")
 		xhttp.WriteError(ctx, w, http.StatusInternalServerError, "failed to list contacts", err)
@@ -53,6 +54,42 @@ func (h *ContactHandler) List(w http.ResponseWriter, r *http.Request) {
 
 	toReturnContacts := fromDomainList(contacts)
 	xhttp.WriteObject(ctx, w, http.StatusOK, toReturnContacts)
+}
+
+func (h *ContactHandler) Export(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	user, err := auth.UserFromContext(ctx)
+	if err != nil {
+		log.Ctx(ctx).Warn().Err(err).Msg("user_contacts:export failed to get user from context")
+		xhttp.WriteError(ctx, w, http.StatusInternalServerError, "failed to get user from context", err)
+		return
+	}
+
+	contactId := mux.Vars(r)[pathContactId]
+	export, err := h.app.ExportContact(ctx, usecase.CmdExportContact{ContactId: contactId}, user)
+	if err != nil {
+		switch {
+		case errors.Is(err, usecase.ErrInvalidCommand):
+			xhttp.WriteError(ctx, w, http.StatusBadRequest, "command validation failed", err)
+		case errors.Is(err, usecase.ErrNotFound):
+			xhttp.WriteError(ctx, w, http.StatusNotFound, "contact not found", err)
+		case errors.Is(err, usecase.ErrForbidden):
+			xhttp.WriteError(ctx, w, http.StatusForbidden, "access denied to contact", err)
+		default:
+			log.Ctx(ctx).Warn().Err(err).Msg("user_contacts:export failed to export contact")
+			xhttp.WriteError(ctx, w, http.StatusInternalServerError, "failed to export contact", err)
+		}
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/vcard")
+	w.Header().Set("Content-Disposition", "attachment;filename=contacts.vcf")
+	w.WriteHeader(http.StatusOK)
+
+	_, err = fmt.Fprint(w, export)
+	if err != nil {
+		log.Ctx(ctx).Warn().Err(err).Msg("user_contacts:export failed to write response")
+	}
 }
 
 type createContactRequest struct {
@@ -165,6 +202,7 @@ func (h *ContactHandler) Delete(w http.ResponseWriter, r *http.Request) {
 		xhttp.WriteError(ctx, w, http.StatusInternalServerError, "failed to get user from context", err)
 		return
 	}
+
 	contactId := mux.Vars(r)[pathContactId]
 
 	err = h.app.DeleteContact(ctx, usecase.CmdDeleteContact{ContactId: contactId}, user)

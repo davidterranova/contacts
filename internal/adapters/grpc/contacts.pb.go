@@ -2,7 +2,7 @@
 // versions:
 // 	protoc-gen-go v1.31.0
 // 	protoc        v4.23.4
-// source: internal/contacts/adapters/grpc/contacts.proto
+// source: contacts.proto
 
 package grpc
 
@@ -38,7 +38,7 @@ type Contact struct {
 func (x *Contact) Reset() {
 	*x = Contact{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_internal_contacts_adapters_grpc_contacts_proto_msgTypes[0]
+		mi := &file_contacts_proto_msgTypes[0]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -51,7 +51,7 @@ func (x *Contact) String() string {
 func (*Contact) ProtoMessage() {}
 
 func (x *Contact) ProtoReflect() protoreflect.Message {
-	mi := &file_internal_contacts_adapters_grpc_contacts_proto_msgTypes[0]
+	mi := &file_contacts_proto_msgTypes[0]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -64,7 +64,7 @@ func (x *Contact) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Contact.ProtoReflect.Descriptor instead.
 func (*Contact) Descriptor() ([]byte, []int) {
-	return file_internal_contacts_adapters_grpc_contacts_proto_rawDescGZIP(), []int{0}
+	return file_contacts_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *Contact) GetId() string {
@@ -132,7 +132,7 @@ type ListContactsRequest struct {
 func (x *ListContactsRequest) Reset() {
 	*x = ListContactsRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_internal_contacts_adapters_grpc_contacts_proto_msgTypes[1]
+		mi := &file_contacts_proto_msgTypes[1]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -145,7 +145,7 @@ func (x *ListContactsRequest) String() string {
 func (*ListContactsRequest) ProtoMessage() {}
 
 func (x *ListContactsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_internal_contacts_adapters_grpc_contacts_proto_msgTypes[1]
+	mi := &file_contacts_proto_msgTypes[1]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -158,7 +158,7 @@ func (x *ListContactsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListContactsRequest.ProtoReflect.Descriptor instead.
 func (*ListContactsRequest) Descriptor() ([]byte, []int) {
-	return file_internal_contacts_adapters_grpc_contacts_proto_rawDescGZIP(), []int{1}
+	return file_contacts_proto_rawDescGZIP(), []int{1}
 }
 
 type ListContactsResponse struct {
@@ -172,7 +172,7 @@ type ListContactsResponse struct {
 func (x *ListContactsResponse) Reset() {
 	*x = ListContactsResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_internal_contacts_adapters_grpc_contacts_proto_msgTypes[2]
+		mi := &file_contacts_proto_msgTypes[2]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -185,7 +185,7 @@ func (x *ListContactsResponse) String() string {
 func (*ListContactsResponse) ProtoMessage() {}
 
 func (x *ListContactsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_internal_contacts_adapters_grpc_contacts_proto_msgTypes[2]
+	mi := &file_contacts_proto_msgTypes[2]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -198,7 +198,7 @@ func (x *ListContactsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListContactsResponse.ProtoReflect.Descriptor instead.
 func (*ListContactsResponse) Descriptor() ([]byte, []int) {
-	return file_internal_contacts_adapters_grpc_contacts_proto_rawDescGZIP(), []int{2}
+	return file_contacts_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *ListContactsResponse) GetContacts() []*Contact {
@@ -219,7 +219,7 @@ type ExportContactRequest struct {
 func (x *ExportContactRequest) Reset() {
 	*x = ExportContactRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_internal_contacts_adapters_grpc_contacts_proto_msgTypes[3]
+		mi := &file_contacts_proto_msgTypes[3]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -232,7 +232,7 @@ func (x *ExportContactRequest) String() string {
 func (*ExportContactRequest) ProtoMessage() {}
 
 func (x *ExportContactRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_internal_contacts_adapters_grpc_contacts_proto_msgTypes[3]
+	mi := &file_contacts_proto_msgTypes[3]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -245,7 +245,7 @@ func (x *ExportContactRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ExportContactRequest.ProtoReflect.Descriptor instead.
 func (*ExportContactRequest) Descriptor() ([]byte, []int) {
-	return file_internal_contacts_adapters_grpc_contacts_proto_rawDescGZIP(), []int{3}
+	return file_contacts_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *ExportContactRequest) GetId() string {
@@ -266,7 +266,7 @@ type ExportContactResponse struct {
 func (x *ExportContactResponse) Reset() {
 	*x = ExportContactResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_internal_contacts_adapters_grpc_contacts_proto_msgTypes[4]
+		mi := &file_contacts_proto_msgTypes[4]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -279,7 +279,7 @@ func (x *ExportContactResponse) String() string {
 func (*ExportContactResponse) ProtoMessage() {}
 
 func (x *ExportContactResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_internal_contacts_adapters_grpc_contacts_proto_msgTypes[4]
+	mi := &file_contacts_proto_msgTypes[4]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -292,7 +292,7 @@ func (x *ExportContactResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ExportContactResponse.ProtoReflect.Descriptor instead.
 func (*ExportContactResponse) Descriptor() ([]byte, []int) {
-	return file_internal_contacts_adapters_grpc_contacts_proto_rawDescGZIP(), []int{4}
+	return file_contacts_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *ExportContactResponse) GetVcard() []byte {
@@ -316,7 +316,7 @@ type CreateContactRequest struct {
 func (x *CreateContactRequest) Reset() {
 	*x = CreateContactRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_internal_contacts_adapters_grpc_contacts_proto_msgTypes[5]
+		mi := &file_contacts_proto_msgTypes[5]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -329,7 +329,7 @@ func (x *CreateContactRequest) String() string {
 func (*CreateContactRequest) ProtoMessage() {}
 
 func (x *CreateContactRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_internal_contacts_adapters_grpc_contacts_proto_msgTypes[5]
+	mi := &file_contacts_proto_msgTypes[5]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -342,7 +342,7 @@ func (x *CreateContactRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateContactRequest.ProtoReflect.Descriptor instead.
 func (*CreateContactRequest) Descriptor() ([]byte, []int) {
-	return file_internal_contacts_adapters_grpc_contacts_proto_rawDescGZIP(), []int{5}
+	return file_contacts_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *CreateContactRequest) GetFirstName() string {
@@ -384,7 +384,7 @@ type CreateContactResponse struct {
 func (x *CreateContactResponse) Reset() {
 	*x = CreateContactResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_internal_contacts_adapters_grpc_contacts_proto_msgTypes[6]
+		mi := &file_contacts_proto_msgTypes[6]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -397,7 +397,7 @@ func (x *CreateContactResponse) String() string {
 func (*CreateContactResponse) ProtoMessage() {}
 
 func (x *CreateContactResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_internal_contacts_adapters_grpc_contacts_proto_msgTypes[6]
+	mi := &file_contacts_proto_msgTypes[6]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -410,7 +410,7 @@ func (x *CreateContactResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateContactResponse.ProtoReflect.Descriptor instead.
 func (*CreateContactResponse) Descriptor() ([]byte, []int) {
-	return file_internal_contacts_adapters_grpc_contacts_proto_rawDescGZIP(), []int{6}
+	return file_contacts_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *CreateContactResponse) GetContact() *Contact {
@@ -431,7 +431,7 @@ type DeleteContactRequest struct {
 func (x *DeleteContactRequest) Reset() {
 	*x = DeleteContactRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_internal_contacts_adapters_grpc_contacts_proto_msgTypes[7]
+		mi := &file_contacts_proto_msgTypes[7]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -444,7 +444,7 @@ func (x *DeleteContactRequest) String() string {
 func (*DeleteContactRequest) ProtoMessage() {}
 
 func (x *DeleteContactRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_internal_contacts_adapters_grpc_contacts_proto_msgTypes[7]
+	mi := &file_contacts_proto_msgTypes[7]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -457,7 +457,7 @@ func (x *DeleteContactRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteContactRequest.ProtoReflect.Descriptor instead.
 func (*DeleteContactRequest) Descriptor() ([]byte, []int) {
-	return file_internal_contacts_adapters_grpc_contacts_proto_rawDescGZIP(), []int{7}
+	return file_contacts_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *DeleteContactRequest) GetId() string {
@@ -476,7 +476,7 @@ type DeleteContactResponse struct {
 func (x *DeleteContactResponse) Reset() {
 	*x = DeleteContactResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_internal_contacts_adapters_grpc_contacts_proto_msgTypes[8]
+		mi := &file_contacts_proto_msgTypes[8]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -489,7 +489,7 @@ func (x *DeleteContactResponse) String() string {
 func (*DeleteContactResponse) ProtoMessage() {}
 
 func (x *DeleteContactResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_internal_contacts_adapters_grpc_contacts_proto_msgTypes[8]
+	mi := &file_contacts_proto_msgTypes[8]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -502,7 +502,7 @@ func (x *DeleteContactResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteContactResponse.ProtoReflect.Descriptor instead.
 func (*DeleteContactResponse) Descriptor() ([]byte, []int) {
-	return file_internal_contacts_adapters_grpc_contacts_proto_rawDescGZIP(), []int{8}
+	return file_contacts_proto_rawDescGZIP(), []int{8}
 }
 
 type UpdateContactRequest struct {
@@ -520,7 +520,7 @@ type UpdateContactRequest struct {
 func (x *UpdateContactRequest) Reset() {
 	*x = UpdateContactRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_internal_contacts_adapters_grpc_contacts_proto_msgTypes[9]
+		mi := &file_contacts_proto_msgTypes[9]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -533,7 +533,7 @@ func (x *UpdateContactRequest) String() string {
 func (*UpdateContactRequest) ProtoMessage() {}
 
 func (x *UpdateContactRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_internal_contacts_adapters_grpc_contacts_proto_msgTypes[9]
+	mi := &file_contacts_proto_msgTypes[9]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -546,7 +546,7 @@ func (x *UpdateContactRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateContactRequest.ProtoReflect.Descriptor instead.
 func (*UpdateContactRequest) Descriptor() ([]byte, []int) {
-	return file_internal_contacts_adapters_grpc_contacts_proto_rawDescGZIP(), []int{9}
+	return file_contacts_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *UpdateContactRequest) GetId() string {
@@ -595,7 +595,7 @@ type UpdateContactResponse struct {
 func (x *UpdateContactResponse) Reset() {
 	*x = UpdateContactResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_internal_contacts_adapters_grpc_contacts_proto_msgTypes[10]
+		mi := &file_contacts_proto_msgTypes[10]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -608,7 +608,7 @@ func (x *UpdateContactResponse) String() string {
 func (*UpdateContactResponse) ProtoMessage() {}
 
 func (x *UpdateContactResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_internal_contacts_adapters_grpc_contacts_proto_msgTypes[10]
+	mi := &file_contacts_proto_msgTypes[10]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -621,7 +621,7 @@ func (x *UpdateContactResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateContactResponse.ProtoReflect.Descriptor instead.
 func (*UpdateContactResponse) Descriptor() ([]byte, []int) {
-	return file_internal_contacts_adapters_grpc_contacts_proto_rawDescGZIP(), []int{10}
+	return file_contacts_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *UpdateContactResponse) GetContact() *Contact {
@@ -631,12 +631,10 @@ func (x *UpdateContactResponse) GetContact() *Contact {
 	return nil
 }
 
-var File_internal_contacts_adapters_grpc_contacts_proto protoreflect.FileDescriptor
+var File_contacts_proto protoreflect.FileDescriptor
 
-var file_internal_contacts_adapters_grpc_contacts_proto_rawDesc = []byte{
-	0x0a, 0x2e, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x6e, 0x61, 0x6c, 0x2f, 0x63, 0x6f, 0x6e, 0x74, 0x61,
-	0x63, 0x74, 0x73, 0x2f, 0x61, 0x64, 0x61, 0x70, 0x74, 0x65, 0x72, 0x73, 0x2f, 0x67, 0x72, 0x70,
-	0x63, 0x2f, 0x63, 0x6f, 0x6e, 0x74, 0x61, 0x63, 0x74, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
+var file_contacts_proto_rawDesc = []byte{
+	0x0a, 0x0e, 0x63, 0x6f, 0x6e, 0x74, 0x61, 0x63, 0x74, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
 	0x12, 0x04, 0x67, 0x72, 0x70, 0x63, 0x22, 0xe8, 0x01, 0x0a, 0x07, 0x43, 0x6f, 0x6e, 0x74, 0x61,
 	0x63, 0x74, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x02,
 	0x69, 0x64, 0x12, 0x1c, 0x0a, 0x09, 0x63, 0x72, 0x65, 0x61, 0x74, 0x65, 0x64, 0x41, 0x74, 0x18,
@@ -722,19 +720,19 @@ var file_internal_contacts_adapters_grpc_contacts_proto_rawDesc = []byte{
 }
 
 var (
-	file_internal_contacts_adapters_grpc_contacts_proto_rawDescOnce sync.Once
-	file_internal_contacts_adapters_grpc_contacts_proto_rawDescData = file_internal_contacts_adapters_grpc_contacts_proto_rawDesc
+	file_contacts_proto_rawDescOnce sync.Once
+	file_contacts_proto_rawDescData = file_contacts_proto_rawDesc
 )
 
-func file_internal_contacts_adapters_grpc_contacts_proto_rawDescGZIP() []byte {
-	file_internal_contacts_adapters_grpc_contacts_proto_rawDescOnce.Do(func() {
-		file_internal_contacts_adapters_grpc_contacts_proto_rawDescData = protoimpl.X.CompressGZIP(file_internal_contacts_adapters_grpc_contacts_proto_rawDescData)
+func file_contacts_proto_rawDescGZIP() []byte {
+	file_contacts_proto_rawDescOnce.Do(func() {
+		file_contacts_proto_rawDescData = protoimpl.X.CompressGZIP(file_contacts_proto_rawDescData)
 	})
-	return file_internal_contacts_adapters_grpc_contacts_proto_rawDescData
+	return file_contacts_proto_rawDescData
 }
 
-var file_internal_contacts_adapters_grpc_contacts_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
-var file_internal_contacts_adapters_grpc_contacts_proto_goTypes = []interface{}{
+var file_contacts_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
+var file_contacts_proto_goTypes = []interface{}{
 	(*Contact)(nil),               // 0: grpc.Contact
 	(*ListContactsRequest)(nil),   // 1: grpc.ListContactsRequest
 	(*ListContactsResponse)(nil),  // 2: grpc.ListContactsResponse
@@ -747,7 +745,7 @@ var file_internal_contacts_adapters_grpc_contacts_proto_goTypes = []interface{}{
 	(*UpdateContactRequest)(nil),  // 9: grpc.UpdateContactRequest
 	(*UpdateContactResponse)(nil), // 10: grpc.UpdateContactResponse
 }
-var file_internal_contacts_adapters_grpc_contacts_proto_depIdxs = []int32{
+var file_contacts_proto_depIdxs = []int32{
 	0,  // 0: grpc.ListContactsResponse.contacts:type_name -> grpc.Contact
 	0,  // 1: grpc.CreateContactResponse.contact:type_name -> grpc.Contact
 	0,  // 2: grpc.UpdateContactResponse.contact:type_name -> grpc.Contact
@@ -768,13 +766,13 @@ var file_internal_contacts_adapters_grpc_contacts_proto_depIdxs = []int32{
 	0,  // [0:3] is the sub-list for field type_name
 }
 
-func init() { file_internal_contacts_adapters_grpc_contacts_proto_init() }
-func file_internal_contacts_adapters_grpc_contacts_proto_init() {
-	if File_internal_contacts_adapters_grpc_contacts_proto != nil {
+func init() { file_contacts_proto_init() }
+func file_contacts_proto_init() {
+	if File_contacts_proto != nil {
 		return
 	}
 	if !protoimpl.UnsafeEnabled {
-		file_internal_contacts_adapters_grpc_contacts_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
+		file_contacts_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Contact); i {
 			case 0:
 				return &v.state
@@ -786,7 +784,7 @@ func file_internal_contacts_adapters_grpc_contacts_proto_init() {
 				return nil
 			}
 		}
-		file_internal_contacts_adapters_grpc_contacts_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
+		file_contacts_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*ListContactsRequest); i {
 			case 0:
 				return &v.state
@@ -798,7 +796,7 @@ func file_internal_contacts_adapters_grpc_contacts_proto_init() {
 				return nil
 			}
 		}
-		file_internal_contacts_adapters_grpc_contacts_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
+		file_contacts_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*ListContactsResponse); i {
 			case 0:
 				return &v.state
@@ -810,7 +808,7 @@ func file_internal_contacts_adapters_grpc_contacts_proto_init() {
 				return nil
 			}
 		}
-		file_internal_contacts_adapters_grpc_contacts_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
+		file_contacts_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*ExportContactRequest); i {
 			case 0:
 				return &v.state
@@ -822,7 +820,7 @@ func file_internal_contacts_adapters_grpc_contacts_proto_init() {
 				return nil
 			}
 		}
-		file_internal_contacts_adapters_grpc_contacts_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
+		file_contacts_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*ExportContactResponse); i {
 			case 0:
 				return &v.state
@@ -834,7 +832,7 @@ func file_internal_contacts_adapters_grpc_contacts_proto_init() {
 				return nil
 			}
 		}
-		file_internal_contacts_adapters_grpc_contacts_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
+		file_contacts_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*CreateContactRequest); i {
 			case 0:
 				return &v.state
@@ -846,7 +844,7 @@ func file_internal_contacts_adapters_grpc_contacts_proto_init() {
 				return nil
 			}
 		}
-		file_internal_contacts_adapters_grpc_contacts_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
+		file_contacts_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*CreateContactResponse); i {
 			case 0:
 				return &v.state
@@ -858,7 +856,7 @@ func file_internal_contacts_adapters_grpc_contacts_proto_init() {
 				return nil
 			}
 		}
-		file_internal_contacts_adapters_grpc_contacts_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
+		file_contacts_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*DeleteContactRequest); i {
 			case 0:
 				return &v.state
@@ -870,7 +868,7 @@ func file_internal_contacts_adapters_grpc_contacts_proto_init() {
 				return nil
 			}
 		}
-		file_internal_contacts_adapters_grpc_contacts_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
+		file_contacts_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*DeleteContactResponse); i {
 			case 0:
 				return &v.state
@@ -882,7 +880,7 @@ func file_internal_contacts_adapters_grpc_contacts_proto_init() {
 				return nil
 			}
 		}
-		file_internal_contacts_adapters_grpc_contacts_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
+		file_contacts_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*UpdateContactRequest); i {
 			case 0:
 				return &v.state
@@ -894,7 +892,7 @@ func file_internal_contacts_adapters_grpc_contacts_proto_init() {
 				return nil
 			}
 		}
-		file_internal_contacts_adapters_grpc_contacts_proto_msgTypes[10].Exporter = func(v interface{}, i int) interface{} {
+		file_contacts_proto_msgTypes[10].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*UpdateContactResponse); i {
 			case 0:
 				return &v.state
@@ -911,18 +909,18 @@ func file_internal_contacts_adapters_grpc_contacts_proto_init() {
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: file_internal_contacts_adapters_grpc_contacts_proto_rawDesc,
+			RawDescriptor: file_contacts_proto_rawDesc,
 			NumEnums:      0,
 			NumMessages:   11,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
-		GoTypes:           file_internal_contacts_adapters_grpc_contacts_proto_goTypes,
-		DependencyIndexes: file_internal_contacts_adapters_grpc_contacts_proto_depIdxs,
-		MessageInfos:      file_internal_contacts_adapters_grpc_contacts_proto_msgTypes,
+		GoTypes:           file_contacts_proto_goTypes,
+		DependencyIndexes: file_contacts_proto_depIdxs,
+		MessageInfos:      file_contacts_proto_msgTypes,
 	}.Build()
-	File_internal_contacts_adapters_grpc_contacts_proto = out.File
-	file_internal_contacts_adapters_grpc_contacts_proto_rawDesc = nil
-	file_internal_contacts_adapters_grpc_contacts_proto_goTypes = nil
-	file_internal_contacts_adapters_grpc_contacts_proto_depIdxs = nil
+	File_contacts_proto = out.File
+	file_contacts_proto_rawDesc = nil
+	file_contacts_proto_goTypes = nil
+	file_contacts_proto_depIdxs = nil
 }

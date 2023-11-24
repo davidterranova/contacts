@@ -18,6 +18,8 @@ type PgContactList struct {
 	db *gorm.DB
 }
 
+// type scopeFn func(db *gorm.DB) *gorm.DB
+
 type pgContact struct {
 	Id               uuid.UUID  `gorm:"primaryKey;column:id"`
 	CreatedAt        time.Time  `gorm:"column:created_at"`
@@ -117,23 +119,13 @@ func (l *PgContactList) HandleEvent(e eventsourcing.Event[domain.Contact]) {
 	}
 }
 
-func (l *PgContactList) List(ctx context.Context, query usecase.QueryListContact) ([]*domain.Contact, error) {
+func (l *PgContactList) List(ctx context.Context, query usecase.QueryContact) ([]*domain.Contact, error) {
 	var pgContacts []pgContact
-
-	issuedBy := func(by user.User) func(db *gorm.DB) *gorm.DB {
-		return func(db *gorm.DB) *gorm.DB {
-			if by == nil {
-				return db
-			}
-
-			return db.Where("created_by = ?", by.String())
-		}
-	}
 
 	err := l.db.
 		Debug().
 		WithContext(ctx).
-		Scopes(issuedBy(query.User)).
+		Scopes(scopesFromQuery(query)...).
 		Order("created_at DESC").
 		Find(&pgContacts).Error
 	if err != nil {
@@ -153,13 +145,22 @@ func (l *PgContactList) List(ctx context.Context, query usecase.QueryListContact
 	return contacts, nil
 }
 
+func (l *PgContactList) Get(ctx context.Context, query usecase.QueryContact) (*domain.Contact, error) {
+	pgC, err := l.load(*query.ContactId, scopesFromQuery(query)...)
+	if err != nil {
+		return nil, err
+	}
+
+	return fromPgContact(pgC)
+}
+
 func (l *PgContactList) create(c pgContact) error {
 	return l.db.FirstOrCreate(&c).Error
 }
 
-func (l *PgContactList) load(id uuid.UUID) (pgContact, error) {
+func (l *PgContactList) load(id uuid.UUID, scopes ...func(db *gorm.DB) *gorm.DB) (pgContact, error) {
 	var pgC pgContact
-	err := l.db.Take(&pgC, id).Error
+	err := l.db.Scopes(scopes...).Take(&pgC, id).Error
 
 	return pgC, err
 }
@@ -179,6 +180,35 @@ func (l *PgContactList) update(id uuid.UUID, fn func(pgC pgContact) pgContact) e
 
 func (l *PgContactList) delete(id uuid.UUID) error {
 	return l.db.Delete(&pgContact{}, id).Error
+}
+
+func scopesFromQuery(query usecase.QueryContact) []func(db *gorm.DB) *gorm.DB {
+	scopes := make([]func(db *gorm.DB) *gorm.DB, 0)
+
+	scopes = append(scopes, issuedByScope(query.Requestor))
+	scopes = append(scopes, contactIdScope(query.ContactId))
+
+	return scopes
+}
+
+func issuedByScope(by user.User) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if by == nil {
+			return db
+		}
+
+		return db.Where("created_by = ?", by.String())
+	}
+}
+
+func contactIdScope(id *uuid.UUID) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if id == nil {
+			return db
+		}
+
+		return db.Where("id = ?", id.String())
+	}
 }
 
 func fromPgContact(pg pgContact) (*domain.Contact, error) {

@@ -4,6 +4,7 @@ option go_package = "internal/adapters/grpc";
 
 service Contacts {
   rpc ListContacts (ListContactsRequest) returns (ListContactsResponse) {};
+  rpc ExportContact(ExportContactRequest) returns (ExportContactResponse) {};
   rpc CreateContact (CreateContactRequest) returns (CreateContactResponse) {};
   rpc DeleteContact (DeleteContactRequest) returns (DeleteContactResponse) {};
   rpc UpdateContact (UpdateContactRequest) returns (UpdateContactResponse) {};
@@ -24,6 +25,13 @@ message ListContactsRequest {}
 message ListContactsResponse {
   repeated Contact contacts = 1;
 }
+message ExportContactRequest {
+  string id = 1;
+}
+message ExportContactResponse {
+  bytes vcard = 1;
+}
+
 message CreateContactRequest {
   string firstName = 1;
   string lastName = 2;

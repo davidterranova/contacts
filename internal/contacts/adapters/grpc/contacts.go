@@ -1,7 +1,10 @@
 package grpc
 
 import (
+	"bytes"
 	"context"
+	"fmt"
+	"io"
 
 	"github.com/davidterranova/contacts/internal/contacts/domain"
 	"github.com/davidterranova/contacts/internal/contacts/usecase"
@@ -13,7 +16,8 @@ import (
 const layout = "2006-01-02T15:04:05Z"
 
 type App interface {
-	ListContacts(ctx context.Context, query usecase.QueryListContact) ([]*domain.Contact, error)
+	ListContacts(ctx context.Context, cmdIssuedBy user.User) ([]*domain.Contact, error)
+	ExportContact(ctx context.Context, cmd usecase.CmdExportContact, cmdIssuedBy user.User) (io.Writer, error)
 	CreateContact(ctx context.Context, cmd usecase.CmdCreateContact, cmdIssuedBy user.User) (*domain.Contact, error)
 	UpdateContact(ctx context.Context, cmd usecase.CmdUpdateContact, cmdIssuedBy user.User) (*domain.Contact, error)
 	DeleteContact(ctx context.Context, cmd usecase.CmdDeleteContact, cmdIssuedBy user.User) error
@@ -36,9 +40,7 @@ func (h *Handler) ListContacts(ctx context.Context, req *ListContactsRequest) (*
 		return nil, err
 	}
 
-	contacts, err := h.app.ListContacts(ctx, usecase.QueryListContact{
-		User: user,
-	})
+	contacts, err := h.app.ListContacts(ctx, user)
 	if err != nil {
 		return nil, err
 	}
@@ -46,6 +48,34 @@ func (h *Handler) ListContacts(ctx context.Context, req *ListContactsRequest) (*
 	return &ListContactsResponse{
 		Contacts: toPBContactList(contacts...),
 	}, nil
+}
+
+func (h *Handler) ExportContact(ctx context.Context, req *ExportContactRequest) (*ExportContactResponse, error) {
+	user, err := auth.UserFromContext(ctx)
+	if err != nil {
+		log.Ctx(ctx).Warn().Err(err).Msg("user_contacts:export failed to get user from context")
+		return nil, err
+	}
+
+	writer, err := h.app.ExportContact(
+		ctx,
+		usecase.CmdExportContact{ContactId: req.Id},
+		user,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ExportContactResponse{}
+	buf := new(bytes.Buffer)
+
+	_, err = fmt.Fprint(writer, buf)
+	if err != nil {
+		return nil, err
+	}
+
+	response.Vcard = buf.Bytes()
+	return response, nil
 }
 
 func (h *Handler) CreateContact(ctx context.Context, req *CreateContactRequest) (*CreateContactResponse, error) {

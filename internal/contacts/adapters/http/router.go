@@ -31,4 +31,5 @@ func mountV1Contacts(root *mux.Router, authFn xhttp.AuthFn, app App) {
 	v1.HandleFunc("", contactsHandler.Create).Methods(http.MethodPost)
 	v1.HandleFunc("/{"+pathContactId+"}", contactsHandler.Update).Methods(http.MethodPut)
 	v1.HandleFunc("/{"+pathContactId+"}", contactsHandler.Delete).Methods(http.MethodDelete)
+	v1.HandleFunc("/{"+pathContactId+"}:export", contactsHandler.Export).Methods(http.MethodGet)
 }

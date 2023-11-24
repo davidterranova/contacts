@@ -129,6 +129,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "403":
+          description: "Forbidden"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
         "404":
           description: "Not Found"
           content:
@@ -153,6 +159,48 @@ paths:
       responses:
         "204":
             description: "Delete an existing contact"
+        "403":
+          description: "Forbidden"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: "Not Found"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: "Internal Server Error"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /contacts/{contactId}:export:
+    get:
+      operationId: exportContact
+      tags:
+        - contacts
+      summary: Export an existing contact
+      security:
+        - basicAuth: []
+      parameters:
+        - $ref: "#/components/parameters/contactId"
+      responses:
+        "200":
+          description: "Export an existing contact"
+          content:
+            text/vcard:
+              schema:
+                type: string
+                format: string
+        "403":
+          description: "Forbidden"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
         "404":
           description: "Not Found"
           content:

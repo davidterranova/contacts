@@ -2,6 +2,7 @@ package contacts
 
 import (
 	"context"
+	"io"
 
 	"github.com/davidterranova/contacts/internal/contacts/domain"
 	"github.com/davidterranova/contacts/internal/contacts/usecase"
@@ -14,11 +15,11 @@ type ContactWriteModel interface {
 }
 
 type ContactReadModel interface {
-	usecase.ContactLister
+	usecase.ContactReadModel
 }
 
 type ListContact interface {
-	List(ctx context.Context, query usecase.QueryListContact) ([]*domain.Contact, error)
+	List(ctx context.Context, cmdIssuedBy user.User) ([]*domain.Contact, error)
 }
 
 type CreateContact interface {
@@ -33,24 +34,34 @@ type DeleteContact interface {
 	Delete(ctx context.Context, cmd usecase.CmdDeleteContact, cmdIssuedBy user.User) error
 }
 
+type ExportContact interface {
+	Export(ctx context.Context, cmd usecase.CmdExportContact, cmdIssuedBy user.User) (io.Writer, error)
+}
+
 type App struct {
 	listContact   ListContact
 	createContact CreateContact
 	updateContact UpdateContact
 	deleteContact DeleteContact
+	exportContact ExportContact
 }
 
 func New(writeModel ContactWriteModel, readModel ContactReadModel) *App {
 	return &App{
 		listContact:   usecase.NewListContact(readModel),
+		exportContact: usecase.NewExportContact(readModel),
 		createContact: usecase.NewCreateContact(writeModel),
 		updateContact: usecase.NewUpdateContact(writeModel),
 		deleteContact: usecase.NewDeleteContact(writeModel),
 	}
 }
 
-func (a *App) ListContacts(ctx context.Context, query usecase.QueryListContact) ([]*domain.Contact, error) {
-	return a.listContact.List(ctx, query)
+func (a *App) ListContacts(ctx context.Context, cmdIssuedBy user.User) ([]*domain.Contact, error) {
+	return a.listContact.List(ctx, cmdIssuedBy)
+}
+
+func (a *App) ExportContact(ctx context.Context, cmd usecase.CmdExportContact, cmdIssuedBy user.User) (io.Writer, error) {
+	return a.exportContact.Export(ctx, cmd, cmdIssuedBy)
 }
 
 func (a *App) CreateContact(ctx context.Context, cmd usecase.CmdCreateContact, cmdIssuedBy user.User) (*domain.Contact, error) {

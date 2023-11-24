@@ -10,6 +10,7 @@ package http
 
 import (
 	context "context"
+	io "io"
 	reflect "reflect"
 
 	domain "github.com/davidterranova/contacts/internal/contacts/domain"
@@ -70,8 +71,23 @@ func (mr *MockAppMockRecorder) DeleteContact(arg0, arg1, arg2 any) *gomock.Call 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteContact", reflect.TypeOf((*MockApp)(nil).DeleteContact), arg0, arg1, arg2)
 }
 
+// ExportContact mocks base method.
+func (m *MockApp) ExportContact(arg0 context.Context, arg1 usecase.CmdExportContact, arg2 user.User) (io.Writer, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ExportContact", arg0, arg1, arg2)
+	ret0, _ := ret[0].(io.Writer)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ExportContact indicates an expected call of ExportContact.
+func (mr *MockAppMockRecorder) ExportContact(arg0, arg1, arg2 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExportContact", reflect.TypeOf((*MockApp)(nil).ExportContact), arg0, arg1, arg2)
+}
+
 // ListContacts mocks base method.
-func (m *MockApp) ListContacts(arg0 context.Context, arg1 usecase.QueryListContact) ([]*domain.Contact, error) {
+func (m *MockApp) ListContacts(arg0 context.Context, arg1 user.User) ([]*domain.Contact, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListContacts", arg0, arg1)
 	ret0, _ := ret[0].([]*domain.Contact)

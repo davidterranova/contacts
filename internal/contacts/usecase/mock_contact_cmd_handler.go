@@ -7,12 +7,12 @@
 package usecase
 
 import (
-        reflect "reflect"
-        context "context"
         domain "github.com/davidterranova/contacts/internal/contacts/domain"
         eventsourcing "github.com/davidterranova/cqrs/eventsourcing"
         uuid "github.com/google/uuid"
         gomock "go.uber.org/mock/gomock"
+        reflect "reflect"
+        context "context"
 )
 
 // MockContactCmdHandler is a mock of ContactCmdHandler interface.
