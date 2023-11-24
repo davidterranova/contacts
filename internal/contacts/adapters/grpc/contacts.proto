@@ -1,0 +1,58 @@
+syntax = "proto3";
+package grpc;
+option go_package = "internal/adapters/grpc";
+
+service Contacts {
+  rpc ListContacts (ListContactsRequest) returns (ListContactsResponse) {};
+  rpc ExportContact(ExportContactRequest) returns (ExportContactResponse) {};
+  rpc CreateContact (CreateContactRequest) returns (CreateContactResponse) {};
+  rpc DeleteContact (DeleteContactRequest) returns (DeleteContactResponse) {};
+  rpc UpdateContact (UpdateContactRequest) returns (UpdateContactResponse) {};
+}
+
+message Contact {
+  string id = 1;
+  string createdAt = 2;
+  string updatedAt = 3;
+  string firstName = 4;
+  string lastName = 5;
+  string email = 6;
+  string phone = 7;
+  int32 aggregate_version = 8;
+}
+
+message ListContactsRequest {}
+message ListContactsResponse {
+  repeated Contact contacts = 1;
+}
+message ExportContactRequest {
+  string id = 1;
+}
+message ExportContactResponse {
+  bytes vcard = 1;
+}
+
+message CreateContactRequest {
+  string firstName = 1;
+  string lastName = 2;
+  string email = 3;
+  string phone = 4;
+}
+message CreateContactResponse {
+  Contact contact = 1;
+}
+message DeleteContactRequest {
+  string id = 1;
+}
+message DeleteContactResponse {}
+message UpdateContactRequest {
+  string id = 1;
+  string firstName = 2;
+  string lastName = 3;
+  string email = 4;
+  string phone = 5;
+}
+message UpdateContactResponse {
+  Contact contact = 1;
+}
+

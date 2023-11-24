@@ -3,9 +3,9 @@ package cmd
 import (
 	"encoding/json"
 
-	"github.com/davidterranova/contacts/pkg/pg"
 	"github.com/davidterranova/contacts/pkg/xhttp"
 	"github.com/davidterranova/contacts/pkg/xlogs"
+	"github.com/davidterranova/cqrs/pg"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"

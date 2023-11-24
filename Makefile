@@ -9,7 +9,7 @@ BUILDTIME ?= $(shell date -u +%FT%T)
 
 DOCKER_COMPOSE_CMD=docker-compose -p contacts
 
-LINT ?= golangci-lint
+LINT = golangci-lint
 
 # build flags
 BUILD_ENV=GOARCH=amd64 CGO_ENABLED=0
@@ -17,7 +17,10 @@ LDFLAGS=-ldflags='-w -s -X github.com/davidterranova/contacts/cmd.Version=${VERS
 BUILD_FLAGS=-a
 
 GRPC_DST_DIR=.
-GRPC_SRC_DIR=./internal/adapters/grpc
+GRPC_SRC_DIR=./internal/contacts/adapters/grpc
+
+include .env
+export $(shell sed 's/=.*//' .env)
 
 .PHONY: build
 build: clean prepare
@@ -70,3 +73,8 @@ migrate-up:
 .PHONY: migrate-down
 migrate-down:
 	go run main.go dbmigrate down --target eventstore
+
+env:
+# export $(cat env) xargs
+	env | grep CONTACT
+
