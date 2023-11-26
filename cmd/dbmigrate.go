@@ -1,8 +1,10 @@
 package cmd
 
 import (
+	"embed"
 	"errors"
 
+	lpg "github.com/davidterranova/contacts/pkg/pg"
 	"github.com/davidterranova/cqrs/pg"
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
@@ -60,20 +62,39 @@ func runDBMigratDown(cmd *cobra.Command, args []string) {
 func initDBMigrate(cmd *cobra.Command, args []string) {
 	initConfig(cmd, args)
 
-	fs, err := pg.NewMigratorFS()
+	var (
+		dbConfig pg.DBConfig
+		fs       embed.FS
+		path     string
+		err      error
+	)
+
+	migrations := pg.NewMigrations()
+	migrations.Append("eventstore", "migrations", pg.EventSourcingFS)
+	migrations.Append("readmodel", "migrations", lpg.ReadModelFS)
+
+	switch *target {
+	case "eventstore":
+		log.Info().Str("target", "eventstore").Msg("migration configuration loaded")
+		dbConfig = cfg.EventStoreDB
+		fs, path, err = migrations.Get("eventstore")
+	case "readmodel":
+		log.Info().Str("target", "readmodel").Msg("migration configuration loaded")
+		dbConfig = cfg.ReadModelDB
+		fs, path, err = migrations.Get("readmodel")
+	default:
+		log.Fatal().Str("available", "[eventstore]").Str("target", *target).Msg("unknown target")
+	}
+	if err != nil {
+		log.Fatal().Err(err).Msg("failed to get migration configuration")
+	}
+
+	driver, err := pg.NewMigratorFS(fs, path)
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to create migrator filesystem")
 	}
 
-	var dbConfig pg.DBConfig
-	switch *target {
-	case "eventstore":
-		dbConfig = cfg.EventStoreDB
-	default:
-		log.Fatal().Str("available", "[eventstore]").Str("target", *target).Msg("unknown target")
-	}
-
-	migrator, err = migrate.NewWithSourceInstance("iofs", fs, string(dbConfig.ConnString))
+	migrator, err = migrate.NewWithSourceInstance("iofs", driver, string(dbConfig.ConnString))
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to create migrate instance")
 	}
