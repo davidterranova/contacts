@@ -18,13 +18,11 @@ type PgContactList struct {
 	db *gorm.DB
 }
 
-// type scopeFn func(db *gorm.DB) *gorm.DB
-
 type pgContact struct {
 	Id               uuid.UUID  `gorm:"primaryKey;column:id"`
-	CreatedAt        time.Time  `gorm:"column:created_at"`
-	UpdatedAt        time.Time  `gorm:"column:updated_at"`
-	DeletedAt        *time.Time `gorm:"column:deleted_at"`
+	CreatedAt        time.Time  `gorm:"column:created_at;autoUpdateTime:false"`
+	UpdatedAt        time.Time  `gorm:"column:updated_at;autoUpdateTime:false"`
+	DeletedAt        *time.Time `gorm:"column:deleted_at;autoUpdateTime:false"`
 	CreatedBy        string     `gorm:"column:created_by"`
 	AggregateVersion int        `gorm:"column:aggregate_version"`
 
@@ -123,7 +121,6 @@ func (l *PgContactList) List(ctx context.Context, query usecase.QueryContact) ([
 	var pgContacts []pgContact
 
 	err := l.db.
-		Debug().
 		WithContext(ctx).
 		Scopes(scopesFromQuery(query)...).
 		Order("created_at DESC").
@@ -174,7 +171,7 @@ func (l *PgContactList) update(id uuid.UUID, fn func(pgC pgContact) pgContact) e
 
 		pgC = fn(pgC)
 
-		return tx.Save(&pgC).Error
+		return tx.Save(pgC).Error
 	})
 }
 
