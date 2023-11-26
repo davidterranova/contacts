@@ -3,8 +3,8 @@ package domain
 import (
 	"time"
 
+	"github.com/davidterranova/contacts/pkg/user"
 	"github.com/davidterranova/cqrs/eventsourcing"
-	"github.com/davidterranova/cqrs/user"
 	"github.com/google/uuid"
 )
 

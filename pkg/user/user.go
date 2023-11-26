@@ -19,8 +19,6 @@ type User interface {
 	Id() uuid.UUID
 	Type() pkguser.UserType
 	IsAuthenticatedOrSystem() bool
-	MarshalJSON() ([]byte, error)
-	UnmarshalJSON([]byte) error
 	String() string
 	FromString(string) error
 }

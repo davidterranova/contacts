@@ -1,6 +1,7 @@
 package domain
 
 import (
+	luser "github.com/davidterranova/contacts/pkg/user"
 	"github.com/davidterranova/cqrs/user"
 
 	"github.com/davidterranova/cqrs/eventsourcing"
@@ -60,11 +61,9 @@ func NewEvtContactCreated(aggregateId uuid.UUID, aggregateVersion int, createdBy
 }
 
 func (e EvtContactCreated) Apply(contact *Contact) error {
-	contact.Process(e)
-
-	contact.CreatedAt = e.IssuedAt()
-	contact.UpdatedAt = e.IssuedAt()
-	contact.CreatedBy = e.IssuedBy()
+	contact.Init(e)
+	lu := e.IssuedBy().(luser.User)
+	contact.CreatedBy = lu
 
 	return nil
 }
