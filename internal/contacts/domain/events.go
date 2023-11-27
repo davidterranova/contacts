@@ -1,8 +1,7 @@
 package domain
 
 import (
-	luser "github.com/davidterranova/contacts/pkg/user"
-	"github.com/davidterranova/cqrs/user"
+	"github.com/davidterranova/contacts/pkg/user"
 
 	"github.com/davidterranova/cqrs/eventsourcing"
 	"github.com/google/uuid"
@@ -48,7 +47,7 @@ type EvtContactCreated struct {
 	*eventsourcing.EventBase[Contact]
 }
 
-func NewEvtContactCreated(aggregateId uuid.UUID, aggregateVersion int, createdBy user.User) *EvtContactCreated {
+func NewEvtContactCreated(aggregateId uuid.UUID, aggregateVersion int, createdBy eventsourcing.User) *EvtContactCreated {
 	return &EvtContactCreated{
 		EventBase: eventsourcing.NewEventBase[Contact](
 			AggregateContact,
@@ -62,7 +61,7 @@ func NewEvtContactCreated(aggregateId uuid.UUID, aggregateVersion int, createdBy
 
 func (e EvtContactCreated) Apply(contact *Contact) error {
 	contact.Init(e)
-	lu := e.IssuedBy().(luser.User)
+	lu := e.IssuedBy().(user.User)
 	contact.CreatedBy = lu
 
 	return nil
@@ -74,7 +73,7 @@ type EvtContactEmailUpdated struct {
 	Email string `json:"email"`
 }
 
-func NewEvtContactEmailUpdated(aggregateId uuid.UUID, aggregateVersion int, updatedBy user.User, email string) *EvtContactEmailUpdated {
+func NewEvtContactEmailUpdated(aggregateId uuid.UUID, aggregateVersion int, updatedBy eventsourcing.User, email string) *EvtContactEmailUpdated {
 	return &EvtContactEmailUpdated{
 		EventBase: eventsourcing.NewEventBase[Contact](
 			AggregateContact,
@@ -103,7 +102,7 @@ type EvtContactNameUpdated struct {
 	LastName  string `json:"last_name"`
 }
 
-func NewEvtContactNameUpdated(aggregateId uuid.UUID, aggregateVersion int, updatedBy user.User, firstName string, lastName string) *EvtContactNameUpdated {
+func NewEvtContactNameUpdated(aggregateId uuid.UUID, aggregateVersion int, updatedBy eventsourcing.User, firstName string, lastName string) *EvtContactNameUpdated {
 	return &EvtContactNameUpdated{
 		EventBase: eventsourcing.NewEventBase[Contact](
 			AggregateContact,
@@ -133,7 +132,7 @@ type EvtContactPhoneUpdated struct {
 	Phone string `json:"phone"`
 }
 
-func NewEvtContactPhoneUpdated(aggregateId uuid.UUID, aggregateVersion int, updatedBy user.User, phone string) *EvtContactPhoneUpdated {
+func NewEvtContactPhoneUpdated(aggregateId uuid.UUID, aggregateVersion int, updatedBy eventsourcing.User, phone string) *EvtContactPhoneUpdated {
 	return &EvtContactPhoneUpdated{
 		EventBase: eventsourcing.NewEventBase[Contact](
 			AggregateContact,
@@ -159,7 +158,7 @@ type EvtContactDeleted struct {
 	*eventsourcing.EventBase[Contact]
 }
 
-func NewEvtContactDeleted(aggregateId uuid.UUID, aggregateVersion int, deletedBy user.User) *EvtContactDeleted {
+func NewEvtContactDeleted(aggregateId uuid.UUID, aggregateVersion int, deletedBy eventsourcing.User) *EvtContactDeleted {
 	return &EvtContactDeleted{
 		EventBase: eventsourcing.NewEventBase[Contact](
 			AggregateContact,

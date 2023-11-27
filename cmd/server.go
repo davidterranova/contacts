@@ -16,7 +16,7 @@ import (
 	contactsHttp "github.com/davidterranova/contacts/internal/contacts/adapters/http"
 	"github.com/davidterranova/contacts/internal/contacts/domain"
 	contactsPorts "github.com/davidterranova/contacts/internal/contacts/ports"
-	luser "github.com/davidterranova/contacts/pkg/user"
+	"github.com/davidterranova/contacts/pkg/user"
 	"github.com/davidterranova/contacts/pkg/xhttp"
 	"github.com/davidterranova/cqrs/admin"
 	adminHttp "github.com/davidterranova/cqrs/admin/adapters/http"
@@ -24,7 +24,6 @@ import (
 	"github.com/davidterranova/cqrs/eventsourcing/eventrepository"
 	"github.com/davidterranova/cqrs/eventsourcing/eventstream"
 	"github.com/davidterranova/cqrs/pg"
-	"github.com/davidterranova/cqrs/user"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/rs/zerolog/log"
@@ -33,7 +32,7 @@ import (
 )
 
 type contactContainer struct {
-	userFactory          user.UserFactory
+	userFactory          eventsourcing.UserFactory
 	eventRegistry        eventsourcing.EventRegistry[domain.Contact]
 	eventRepository      eventsourcing.EventRepository
 	eventSubscriber      eventsourcing.Subscriber[domain.Contact]
@@ -149,8 +148,8 @@ func newContactContainer(ctx context.Context, cfg Config) (*contactContainer, er
 		return domain.New()
 	}
 
-	container.userFactory = func() user.User {
-		return luser.New(uuid.Nil)
+	container.userFactory = func() eventsourcing.User {
+		return user.New(uuid.Nil)
 	}
 	// event registry
 	container.eventRegistry = eventsourcing.NewEventRegistry[domain.Contact]()
