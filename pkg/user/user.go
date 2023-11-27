@@ -6,18 +6,25 @@ import (
 	"fmt"
 	"strings"
 
-	pkguser "github.com/davidterranova/cqrs/user"
 	"github.com/google/uuid"
 )
 
+type UserType string
+
+const (
+	UserTypeSystem          UserType = "system"
+	UserTypeAuthenticated   UserType = "authenticated"
+	UserTypeUnauthenticated UserType = "unauthenticated"
+)
+
 var (
-	Unauthenticated = new(uuid.Nil, pkguser.UserTypeUnauthenticated)
-	System          = new(uuid.Nil, pkguser.UserTypeSystem)
+	Unauthenticated = new(uuid.Nil, UserTypeUnauthenticated)
+	System          = new(uuid.Nil, UserTypeSystem)
 )
 
 type User interface {
 	Id() uuid.UUID
-	Type() pkguser.UserType
+	Type() UserType
 	IsAuthenticatedOrSystem() bool
 	String() string
 	FromString(string) error
@@ -25,14 +32,14 @@ type User interface {
 
 type user struct {
 	id       uuid.UUID
-	userType pkguser.UserType
+	userType UserType
 }
 
 func New(id uuid.UUID) *user {
-	return new(id, pkguser.UserTypeAuthenticated)
+	return new(id, UserTypeAuthenticated)
 }
 
-func new(id uuid.UUID, userType pkguser.UserType) *user {
+func new(id uuid.UUID, userType UserType) *user {
 	return &user{
 		id:       id,
 		userType: userType,
@@ -43,12 +50,12 @@ func (u user) Id() uuid.UUID {
 	return u.id
 }
 
-func (u user) Type() pkguser.UserType {
+func (u user) Type() UserType {
 	return u.userType
 }
 
 func (u user) IsAuthenticatedOrSystem() bool {
-	return u.userType == pkguser.UserTypeAuthenticated || u.userType == pkguser.UserTypeSystem
+	return u.userType == UserTypeAuthenticated || u.userType == UserTypeSystem
 }
 
 func (u user) MarshalJSON() ([]byte, error) {
@@ -74,7 +81,7 @@ func (u *user) UnmarshalJSON(data []byte) error {
 	}
 
 	u.id = a.Id
-	u.userType = pkguser.UserType(a.Type)
+	u.userType = UserType(a.Type)
 
 	return nil
 }
@@ -95,7 +102,7 @@ func (u *user) FromString(s string) error {
 		return fmt.Errorf("invalid user string: %s", s)
 	}
 
-	u.userType = pkguser.UserType(records[0])
+	u.userType = UserType(records[0])
 	u.id, err = uuid.Parse(records[1])
 
 	return err
