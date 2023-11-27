@@ -89,7 +89,6 @@ func NewEvtContactEmailUpdated(aggregateId uuid.UUID, aggregateVersion int, upda
 func (e EvtContactEmailUpdated) Apply(contact *Contact) error {
 	contact.Process(e)
 
-	contact.UpdatedAt = e.IssuedAt()
 	contact.Email = e.Email
 
 	return nil
@@ -119,7 +118,6 @@ func NewEvtContactNameUpdated(aggregateId uuid.UUID, aggregateVersion int, updat
 func (e EvtContactNameUpdated) Apply(contact *Contact) error {
 	contact.Process(e)
 
-	contact.UpdatedAt = e.IssuedAt()
 	contact.FirstName = e.FirstName
 	contact.LastName = e.LastName
 
@@ -148,7 +146,6 @@ func NewEvtContactPhoneUpdated(aggregateId uuid.UUID, aggregateVersion int, upda
 func (e EvtContactPhoneUpdated) Apply(contact *Contact) error {
 	contact.Process(e)
 
-	contact.UpdatedAt = e.IssuedAt()
 	contact.Phone = e.Phone
 
 	return nil

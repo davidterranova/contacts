@@ -76,8 +76,8 @@ func (r *Resolver) CreateContact(ctx context.Context, input model.NewContact) (*
 func toGQLContact(contact *domain.Contact) *model.Contact {
 	return &model.Contact{
 		ID:               contact.AggregateId().String(),
-		CreatedAt:        contact.CreatedAt.Format("2006-01-02T15:04:05Z"),
-		UpdatedAt:        contact.UpdatedAt.Format("2006-01-02T15:04:05Z"),
+		CreatedAt:        contact.CreatedAt().Format("2006-01-02T15:04:05Z"),
+		UpdatedAt:        contact.UpdatedAt().Format("2006-01-02T15:04:05Z"),
 		FirstName:        contact.FirstName,
 		LastName:         contact.LastName,
 		Email:            contact.Email,

@@ -220,8 +220,6 @@ func fromPgContact(pg pgContact) (*domain.Contact, error) {
 			pg.Id,
 			pg.AggregateVersion,
 		),
-		CreatedAt: pg.CreatedAt,
-		UpdatedAt: pg.UpdatedAt,
 		DeletedAt: pg.DeletedAt,
 		CreatedBy: user,
 		FirstName: pg.FirstName,
