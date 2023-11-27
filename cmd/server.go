@@ -39,7 +39,7 @@ type contactContainer struct {
 	eventPublisher       eventsourcing.Publisher[domain.Contact]
 	eventStreamPublisher *eventsourcing.EventStreamPublisher[domain.Contact]
 	eventStore           eventsourcing.EventStore[domain.Contact]
-	contactFactory       func() *domain.Contact
+	contactFactory       eventsourcing.AggregateFactory[domain.Contact]
 }
 
 var serverCmd = &cobra.Command{
