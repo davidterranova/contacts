@@ -57,8 +57,9 @@ func newCmdCreateContact(data CmdCreateContact, cmdIssuedBy user.User) cmdCreate
 }
 
 func (c cmdCreateContact) Apply(aggregate *domain.Contact) ([]eventsourcing.Event[domain.Contact], error) {
-	if aggregate.AggregateId() != uuid.Nil {
-		return nil, eventsourcing.ErrAggregateAlreadyExists
+	err := eventsourcing.EnsureNewAggregate(aggregate)
+	if err != nil {
+		return nil, err
 	}
 
 	v := aggregate.AggregateVersion()

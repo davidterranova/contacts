@@ -63,9 +63,11 @@ func newCmdUpdateContact(contactId uuid.UUID, data CmdUpdateContact, cmdIssuedBy
 }
 
 func (c cmdUpdateContact) Apply(aggregate *domain.Contact) ([]eventsourcing.Event[domain.Contact], error) {
-	if aggregate.AggregateId() == uuid.Nil {
-		return nil, eventsourcing.ErrAggregateNotFound
+	err := eventsourcing.EnsureAggregateNotNew(aggregate)
+	if err != nil {
+		return nil, err
 	}
+
 	if err := checkUpdatePolicy(c, aggregate); err != nil {
 		return nil, err
 	}

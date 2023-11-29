@@ -63,9 +63,11 @@ func newCmdDeleteContact(contactId uuid.UUID, cmdIssuedBy user.User) cmdDeleteCo
 }
 
 func (c cmdDeleteContact) Apply(aggregate *domain.Contact) ([]eventsourcing.Event[domain.Contact], error) {
-	if aggregate.AggregateId() == uuid.Nil {
-		return nil, eventsourcing.ErrAggregateNotFound
+	err := eventsourcing.EnsureAggregateNotNew(aggregate)
+	if err != nil {
+		return nil, err
 	}
+
 	if err := checkDeletePolicy(c, aggregate); err != nil {
 		return nil, err
 	}
