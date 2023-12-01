@@ -51,7 +51,7 @@ func (l *PgContactList) HandleEvent(e eventsourcing.Event[domain.Contact]) {
 	log.Debug().
 		Str("aggregate_id", e.AggregateId().String()).
 		Str("aggregate_type", string(e.AggregateType())).
-		Str("event_type", e.EventType()).
+		Str("event_type", e.EventType().String()).
 		Interface("event", e).
 		Msg("read model handling event")
 
@@ -111,7 +111,7 @@ func (l *PgContactList) HandleEvent(e eventsourcing.Event[domain.Contact]) {
 		log.Error().Err(err).
 			Interface("event", e).
 			Str("aggregate_type", string(e.AggregateType())).
-			Str("event_type", e.EventType()).
+			Str("event_type", e.EventType().String()).
 			Str("aggregate_id", e.AggregateId().String()).
 			Msg("error applying event")
 	}
