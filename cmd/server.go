@@ -169,6 +169,7 @@ func newContactContainer(ctx context.Context, cfg Config) (*contactContainer, er
 		container.userFactory,
 		container.eventPublisher,
 		100,
+		true,
 	)
 
 	// event store
