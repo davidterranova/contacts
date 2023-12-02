@@ -166,6 +166,7 @@ func newContactContainer(ctx context.Context, cfg Config) (*contactContainer, er
 	container.eventStreamPublisher = eventsourcing.NewEventStreamPublisher[domain.Contact](
 		container.eventRepository,
 		container.eventRegistry,
+		domain.AggregateContact,
 		container.userFactory,
 		container.eventPublisher,
 		100,
