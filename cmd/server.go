@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
@@ -189,14 +190,11 @@ func newContactContainer(ctx context.Context, cfg Config) (*contactContainer, er
 }
 
 func contactsApp(ctx context.Context, container *contactContainer, cfg Config) (*contacts.App, error) {
-	contactWriteModel, err := eventsourcing.NewCommandHandler[domain.Contact](
+	contactWriteModel := eventsourcing.NewCommandHandler[domain.Contact](
 		container.eventStore,
 		container.contactFactory,
-		100,
+		eventsourcing.CacheOption{Size: 100, TTL: 120 * time.Second},
 	)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create contacts write model: %w", err)
-	}
 
 	contactReadModel, err := contactsReadModel(
 		ctx,
