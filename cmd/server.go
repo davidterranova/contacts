@@ -189,10 +189,14 @@ func newContactContainer(ctx context.Context, cfg Config) (*contactContainer, er
 }
 
 func contactsApp(ctx context.Context, container *contactContainer, cfg Config) (*contacts.App, error) {
-	contactWriteModel := eventsourcing.NewCommandHandler[domain.Contact](
+	contactWriteModel, err := eventsourcing.NewCommandHandler[domain.Contact](
 		container.eventStore,
 		container.contactFactory,
+		100,
 	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create contacts write model: %w", err)
+	}
 
 	contactReadModel, err := contactsReadModel(
 		ctx,
@@ -220,15 +224,13 @@ func contactsReadModel(ctx context.Context, cfg pg.DBConfig, eventStreamSubscrib
 }
 
 func adminApp(ctx context.Context, container *contactContainer) (*admin.App[domain.Contact], error) {
-	app := admin.NewApp[domain.Contact](
+	return admin.NewApp[domain.Contact](
 		container.eventRepository,
 		container.eventRegistry,
 		container.userFactory,
 		domain.AggregateContact,
 		container.contactFactory,
 	)
-
-	return app, nil
 }
 
 func init() {
