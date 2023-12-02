@@ -49,12 +49,12 @@ func (h DeleteContactHandler) Delete(ctx context.Context, cmd CmdDeleteContact, 
 }
 
 type cmdDeleteContact struct {
-	eventsourcing.BaseCommand[domain.Contact]
+	eventsourcing.CommandBase[domain.Contact]
 }
 
 func newCmdDeleteContact(contactId uuid.UUID, cmdIssuedBy user.User) cmdDeleteContact {
 	return cmdDeleteContact{
-		BaseCommand: eventsourcing.NewBaseCommand[domain.Contact](
+		CommandBase: eventsourcing.NewCommandBase[domain.Contact](
 			contactId,
 			domain.AggregateContact,
 			cmdIssuedBy,

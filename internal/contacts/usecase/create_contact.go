@@ -41,13 +41,13 @@ func (h CreateContact) Create(ctx context.Context, cmd CmdCreateContact, cmdIssu
 }
 
 type cmdCreateContact struct {
-	eventsourcing.BaseCommand[*domain.Contact]
+	eventsourcing.CommandBase[*domain.Contact]
 	CmdCreateContact
 }
 
 func newCmdCreateContact(data CmdCreateContact, cmdIssuedBy user.User) cmdCreateContact {
 	return cmdCreateContact{
-		BaseCommand: eventsourcing.NewBaseCommand[*domain.Contact](
+		CommandBase: eventsourcing.NewCommandBase[*domain.Contact](
 			uuid.New(),
 			domain.AggregateContact,
 			cmdIssuedBy,

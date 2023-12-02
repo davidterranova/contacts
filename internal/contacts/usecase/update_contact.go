@@ -47,13 +47,13 @@ func (h UpdateContact) Update(ctx context.Context, cmd CmdUpdateContact, cmdIssu
 }
 
 type cmdUpdateContact struct {
-	eventsourcing.BaseCommand[*domain.Contact]
+	eventsourcing.CommandBase[*domain.Contact]
 	CmdUpdateContact
 }
 
 func newCmdUpdateContact(contactId uuid.UUID, data CmdUpdateContact, cmdIssuedBy user.User) cmdUpdateContact {
 	return cmdUpdateContact{
-		BaseCommand: eventsourcing.NewBaseCommand[*domain.Contact](
+		CommandBase: eventsourcing.NewCommandBase[*domain.Contact](
 			contactId,
 			domain.AggregateContact,
 			cmdIssuedBy,
